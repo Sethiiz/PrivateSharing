@@ -3,6 +3,10 @@ const { signaling, webrtc, settings } = TDG;
 const ICON_LOCK_CLOSED = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
 const ICON_LOCK_OPEN = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 014.7-1.2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
 const ICON_FULLSCREEN = '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 6V2h4M14 10v4h-4M14 6V2h-4M2 10v4h4" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
+const ICON_VOLUME_ON = '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 6v4h3l4 3V3L5 6H2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path><path d="M11 5.5a4 4 0 010 5" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
+const ICON_VOLUME_OFF = '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 6v4h3l4 3V3L5 6H2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path><path d="M10.5 6.5l3 3M13.5 6.5l-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>';
+const ICON_EYE_OPEN = '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z" fill="none" stroke="currentColor" stroke-width="1.2"></path><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.2"></circle></svg>';
+const ICON_EYE_CLOSED = '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 2l12 12M4.3 4.6C2.6 5.7 1 8 1 8s2.5 4.5 7 4.5c1.4 0 2.6-.4 3.6-1M9.9 9.9A2 2 0 016.1 6.1M7 3.6c.3 0 .6-.1 1-.1 4.5 0 7 4.5 7 4.5s-.6 1.1-1.7 2.2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg>';
 
 // ---------- elementos ----------
 
@@ -56,10 +60,13 @@ const turnHostInput = document.getElementById('turnHostInput');
 const turnUserInput = document.getElementById('turnUserInput');
 const turnPassInput = document.getElementById('turnPassInput');
 const audioModeSeg = document.getElementById('audioModeSeg');
+const shareQualitySeg = document.getElementById('shareQualitySeg');
 const saveConfigBtn = document.getElementById('saveConfigBtn');
 const cancelConfigBtn = document.getElementById('cancelConfigBtn');
 
 const emptyView = document.getElementById('emptyView');
+const emptyTitle = document.getElementById('emptyTitle');
+const emptySubtitle = document.getElementById('emptySubtitle');
 const emptyShareBtn = document.getElementById('emptyShareBtn');
 const emptyRoomCode = document.getElementById('emptyRoomCode');
 
@@ -95,6 +102,8 @@ const remoteStreams = new Map(); // broadcasterId -> MediaStream
 const tileEls = new Map(); // 'self' | broadcasterId -> { el, videoEl }
 const reconnecting = new Map(); // broadcasterId -> attempt (number) | 'gave-up'
 const statsByPeer = new Map(); // peerId -> stats
+const includedWatch = new Set(); // broadcasterId que o usuário escolheu assistir
+const mutedTiles = new Set(); // broadcasterId com áudio desligado no mosaico
 
 lobbyNameInput.value = signaling.myName();
 signalUrlLabel.textContent = settings.getSignalUrl();
@@ -115,6 +124,8 @@ function showLobby() {
   tileEls.clear();
   reconnecting.clear();
   statsByPeer.clear();
+  includedWatch.clear();
+  mutedTiles.clear();
   showConfig = false;
   roomScreen.hidden = true;
   lobbyScreen.hidden = false;
@@ -269,6 +280,7 @@ webrtc.on('watch-stopped', ({ broadcasterId }) => {
   tileEls.delete(broadcasterId);
   reconnecting.delete(broadcasterId);
   statsByPeer.delete(broadcasterId);
+  mutedTiles.delete(broadcasterId);
   render();
 });
 webrtc.on('watch-reconnecting', ({ broadcasterId, attempt }) => {
@@ -325,12 +337,28 @@ function renderMosaic() {
       const video = document.createElement('video');
       video.autoplay = true;
       video.playsInline = true;
-      video.muted = id === 'self';
+      video.muted = id === 'self' || mutedTiles.has(id);
       const badge = document.createElement('div');
       badge.className = 'tileBadge';
       badge.innerHTML = '<span class="liveDot"></span><span class="tileBadgeName"></span><span class="tileMeta"></span>';
       const actions = document.createElement('div');
       actions.className = 'tileActions';
+      if (id !== 'self') {
+        const muteBtn = document.createElement('button');
+        muteBtn.className = 'btn btn-secondary btn-icon';
+        const syncMuteIcon = () => {
+          muteBtn.title = video.muted ? 'Ativar áudio' : 'Silenciar';
+          muteBtn.innerHTML = video.muted ? ICON_VOLUME_OFF : ICON_VOLUME_ON;
+        };
+        syncMuteIcon();
+        muteBtn.onclick = () => {
+          video.muted = !video.muted;
+          if (video.muted) mutedTiles.add(id);
+          else mutedTiles.delete(id);
+          syncMuteIcon();
+        };
+        actions.appendChild(muteBtn);
+      }
       const fsBtn = document.createElement('button');
       fsBtn.className = 'btn btn-secondary btn-icon';
       fsBtn.title = 'Tela cheia';
@@ -412,7 +440,20 @@ function renderPeers() {
     status.className = 'peerStatus';
     status.textContent = isMe ? (webrtc.isSharing() ? 'você · transmitindo' : 'você') : p.broadcasting ? 'transmitindo' : '';
 
-    row.append(avatar, name, status);
+    const trailing = document.createElement('div');
+    trailing.className = 'peerTrailing';
+    if (!isMe && p.broadcasting) {
+      const watching = includedWatch.has(p.id);
+      const eyeBtn = document.createElement('button');
+      eyeBtn.className = 'peerIconBtn' + (watching ? '' : ' off');
+      eyeBtn.title = watching ? 'Parar de assistir' : 'Assistir';
+      eyeBtn.innerHTML = watching ? ICON_EYE_OPEN : ICON_EYE_CLOSED;
+      eyeBtn.onclick = () => toggleWatch(p.id);
+      trailing.appendChild(eyeBtn);
+    }
+    trailing.appendChild(status);
+
+    row.append(avatar, name, trailing);
     peersEl.appendChild(row);
   }
 }
@@ -477,6 +518,8 @@ function openConfig() {
   testSignalResult.textContent = '';
   const audioMode = settings.getAudioMode();
   for (const input of audioModeSeg.querySelectorAll('input')) input.checked = input.value === audioMode;
+  const shareQuality = settings.getShareQuality();
+  for (const input of shareQualitySeg.querySelectorAll('input')) input.checked = input.value === shareQuality;
   showConfig = true;
   render();
 }
@@ -504,6 +547,9 @@ saveConfigBtn.onclick = () => {
 
   const audioInput = audioModeSeg.querySelector('input:checked');
   if (audioInput) settings.setAudioMode(audioInput.value);
+
+  const qualityInput = shareQualitySeg.querySelector('input:checked');
+  if (qualityInput) settings.setShareQuality(qualityInput.value);
 
   signalUrlLabel.textContent = newUrl;
   if (urlChanged) signaling.connect();
@@ -566,6 +612,16 @@ function render() {
   const tileCount = (webrtc.isSharing() ? 1 : 0) + remoteStreams.size;
   const showEmpty = !showConfig && !showError && tileCount === 0;
   emptyView.hidden = !showEmpty;
+  if (showEmpty) {
+    const someoneElseBroadcasting = peers.some((p) => p.broadcasting && p.id !== signaling.myId());
+    if (someoneElseBroadcasting) {
+      emptyTitle.textContent = 'Ninguém sendo assistido';
+      emptySubtitle.textContent = 'Tem gente compartilhando na sala — clique no ícone de olho ao lado do nome, na lista à direita, pra assistir.';
+    } else {
+      emptyTitle.textContent = 'Ninguém está compartilhando';
+      emptySubtitle.textContent = 'Assim que alguém da sala começar, você pode escolher assistir. Você também pode começar a compartilhar.';
+    }
+  }
 
   const showMosaic = !showConfig && !showError && tileCount > 0;
   if (showMosaic) renderMosaic();
@@ -615,10 +671,23 @@ signaling.on('room-list', ({ rooms }) => renderRoomList(rooms));
 
 signaling.on('presence', ({ clients }) => {
   peers = clients;
-  const broadcasterIds = peers.filter((p) => p.broadcasting && p.id !== signaling.myId()).map((p) => p.id);
-  webrtc.watchAll(broadcasterIds);
+  refreshWatch();
   render();
 });
+
+function refreshWatch() {
+  const activeBroadcastIds = new Set(peers.filter((p) => p.broadcasting && p.id !== signaling.myId()).map((p) => p.id));
+  for (const id of [...includedWatch]) if (!activeBroadcastIds.has(id)) includedWatch.delete(id);
+  const desired = [...activeBroadcastIds].filter((id) => includedWatch.has(id));
+  webrtc.watchAll(desired);
+}
+
+function toggleWatch(id) {
+  if (includedWatch.has(id)) includedWatch.delete(id);
+  else includedWatch.add(id);
+  refreshWatch();
+  render();
+}
 
 signaling.on('signal', ({ from, data }) => {
   webrtc.handleSignal(from, data);

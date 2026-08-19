@@ -31,9 +31,20 @@ TDG.webrtc = (() => {
 
   // ---------- compartilhar ----------
 
+  function videoConstraints() {
+    switch (TDG.settings.getShareQuality()) {
+      case 'light':
+        return { width: { ideal: 960 }, height: { ideal: 540 }, frameRate: { ideal: 30, max: 30 } };
+      case 'max':
+        return { frameRate: { ideal: 60, max: 60 } };
+      default:
+        return { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } };
+    }
+  }
+
   async function captureDisplay() {
     const audioMode = TDG.settings.getAudioMode();
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: audioMode === 'system' });
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints(), audio: audioMode === 'system' });
     if (audioMode === 'mic') {
       try {
         const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -94,7 +105,18 @@ TDG.webrtc = (() => {
     emit('watcher-count', { count: watcherCount });
   }
 
+  function closeBroadcastConnection(watcherId) {
+    const existing = broadcastConnections.get(watcherId);
+    if (!existing) return;
+    existing.close();
+    broadcastConnections.delete(watcherId);
+    updateWatcherCount(-1);
+    stopStatsLoopIfIdle();
+  }
+
   async function createOfferFor(watcherId) {
+    closeBroadcastConnection(watcherId);
+
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
     broadcastConnections.set(watcherId, pc);
     updateWatcherCount(1);
@@ -218,6 +240,7 @@ TDG.webrtc = (() => {
     watchConnections.delete(broadcasterId);
     prevBytes.delete(broadcasterId);
     stopStatsLoopIfIdle();
+    send({ type: 'signal', to: broadcasterId, data: { stopWatching: true } });
     emit('watch-stopped', { broadcasterId });
   }
 
@@ -228,6 +251,11 @@ TDG.webrtc = (() => {
   // ---------- sinalização ----------
 
   async function handleSignal(fromId, data) {
+    if (data.stopWatching) {
+      closeBroadcastConnection(fromId);
+      return;
+    }
+
     if (data.requestOffer) {
       if (!sharing) return;
       if (data.iceRestart) await restartOfferFor(fromId);

@@ -185,6 +185,16 @@
             </div>
           </div>
 
+          <div>
+            <h6>Qualidade do compartilhamento</h6>
+            <div class="seg" id="shareQualitySeg">
+              <label class="seg-opt"><input type="radio" name="quality" value="light" />Leve</label>
+              <label class="seg-opt"><input type="radio" name="quality" value="standard" />Padrão</label>
+              <label class="seg-opt"><input type="radio" name="quality" value="max" />Máxima</label>
+            </div>
+            <p class="text-muted" style="font-size:12px;margin-top:8px">Leve = 540p/30fps — resolução menor, mas fluido, ideal com várias pessoas assistindo ao mesmo tempo. Padrão = 1080p/30fps. Máxima = resolução nativa, até 60fps.</p>
+          </div>
+
           <div class="configActions">
             <button class="btn btn-primary" id="saveConfigBtn">Salvar</button>
             <button class="btn btn-secondary" id="cancelConfigBtn">Cancelar</button>
@@ -193,8 +203,8 @@
 
         <div id="emptyView" class="centeredView" hidden>
           <svg width="44" height="44" viewBox="0 0 24 24" style="color:var(--color-neutral-800)"><rect x="2" y="4" width="20" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"></rect><path d="M9 21h6M12 17v4" stroke="currentColor" stroke-width="1.1"></path></svg>
-          <div class="centeredTitle">Ninguém está compartilhando</div>
-          <p class="text-muted">Assim que alguém da sala começar, a tela aparece aqui. Você também pode começar.</p>
+          <div class="centeredTitle" id="emptyTitle">Ninguém está compartilhando</div>
+          <p class="text-muted" id="emptySubtitle">Assim que alguém da sala começar, a tela aparece aqui. Você também pode começar.</p>
           <button class="btn btn-primary" id="emptyShareBtn">Compartilhar minha tela</button>
           <div class="inviteHint"><span class="mono accent" id="emptyRoomCode"></span><span>é o código para convidar alguém</span></div>
         </div>

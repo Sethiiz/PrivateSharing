@@ -522,9 +522,37 @@ body {
 }
 
 .peerStatus {
-  margin-left: auto;
   font-size: 11px;
   color: var(--color-neutral-600);
+}
+
+.peerTrailing {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.peerIconBtn {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-neutral-500);
+  flex: none;
+}
+
+.peerIconBtn:hover {
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text);
+}
+
+.peerIconBtn.off {
+  color: var(--color-neutral-800);
 }
 
 .sidebarStats {

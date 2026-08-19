@@ -31,5 +31,8 @@ TDG.settings = (() => {
 
     getAudioMode: () => get('audioMode', 'system'),
     setAudioMode: (mode) => localStorage.setItem('audioMode', mode),
+
+    getShareQuality: () => get('shareQuality', 'standard'),
+    setShareQuality: (quality) => localStorage.setItem('shareQuality', quality),
   };
 })();
