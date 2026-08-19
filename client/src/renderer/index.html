@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Private Sharing</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <section id="lobby">
+    <div class="lobbyCard">
+      <h1>Private Sharing</h1>
+      <input id="lobbyNameInput" placeholder="Seu nome" />
+
+      <div class="joinRow">
+        <input id="roomCodeInput" placeholder="Código da sala" />
+        <button id="joinRoomBtn">Entrar</button>
+      </div>
+      <button id="createRoomBtn">Criar sala nova</button>
+
+      <h2>Salas ativas</h2>
+      <ul id="roomList"></ul>
+    </div>
+  </section>
+
+  <section id="roomScreen" hidden>
+    <header>
+      <h1><span id="roomCodeLabel"></span></h1>
+      <div class="me">
+        <input id="nameInput" placeholder="Seu nome" />
+        <button id="shareBtn">Compartilhar minha tela</button>
+        <button id="leaveRoomBtn">Sair da sala</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="peopleList">
+        <h2>Quem está na sala</h2>
+        <ul id="peers"></ul>
+      </section>
+
+      <section id="viewer">
+        <h2 id="viewerTitle">Ninguém sendo assistido</h2>
+        <video id="remoteVideo" autoplay playsinline></video>
+      </section>
+    </main>
+  </section>
+
+  <script src="signaling.js"></script>
+  <script src="webrtc.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

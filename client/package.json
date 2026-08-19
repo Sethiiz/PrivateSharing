@@ -1,0 +1,35 @@
+{
+  "name": "private-sharing",
+  "productName": "Private Sharing",
+  "version": "1.0.0",
+  "description": "App de compartilhamento de tela por salas, só pra galera",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.amigos.privatesharing",
+    "productName": "Private Sharing",
+    "files": [
+      "src/main/main.js",
+      "src/main/preload.js",
+      "src/renderer/index.html",
+      "src/renderer/signaling.js",
+      "src/renderer/webrtc.js",
+      "src/renderer/renderer.js",
+      "src/renderer/style.css"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

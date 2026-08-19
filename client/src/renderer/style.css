@@ -1,0 +1,187 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #111318;
+  color: #e8e9ec;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #1a1d24;
+  border-bottom: 1px solid #262a33;
+}
+
+header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.me {
+  display: flex;
+  gap: 8px;
+}
+
+input {
+  background: #22262f;
+  border: 1px solid #333844;
+  color: #e8e9ec;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+button {
+  background: #5865f2;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #4752c4;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  padding: 20px 24px;
+}
+
+#lobby {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobbyCard {
+  width: 360px;
+  background: #1a1d24;
+  border: 1px solid #262a33;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.lobbyCard h1 {
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+
+.lobbyCard h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #9aa0ab;
+  letter-spacing: 0.05em;
+  margin: 20px 0 8px;
+}
+
+.lobbyCard input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.lobbyCard > button {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.joinRow {
+  display: flex;
+  gap: 8px;
+}
+
+.joinRow input {
+  flex: 1;
+}
+
+.joinRow button {
+  flex-shrink: 0;
+}
+
+#roomList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#roomList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #22262f;
+  border: 1px solid #333844;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+#roomList li button {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+#peopleList h2, #viewer h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #9aa0ab;
+  letter-spacing: 0.05em;
+}
+
+#peers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#peers li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a1d24;
+  border: 1px solid #262a33;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+#peers li button {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+#viewer {
+  background: #000;
+  border-radius: 10px;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 12px;
+}
+
+#viewerTitle {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+}
+
+video {
+  width: 100%;
+  max-height: 560px;
+  border-radius: 6px;
+  background: #000;
+}
