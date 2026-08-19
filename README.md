@@ -21,11 +21,12 @@ VPS: `npm install && npm start` atrás de um proxy reverso com HTTPS
 
 ## Configurar o cliente
 
-Em `client/src/renderer/signaling.js`, troque:
-
-```js
-const SIGNAL_URL = 'wss://SEU-SERVIDOR-AQUI.onrender.com';
-```
+Por padrão o app aponta pro servidor já hospedado
+(`wss://privatesharing.onrender.com`, definido em
+`client/src/renderer/settings.js`). Pra apontar pro seu próprio servidor,
+não precisa mexer no código: abra o app, entre numa sala, clique no ícone
+de engrenagem (Configurações) e troque o "Endereço WSS" — dá pra testar a
+conexão ali mesmo antes de salvar. Fica salvo por máquina.
 
 ## Rodar / gerar o instalador
 
@@ -44,8 +45,9 @@ npm run dist      # gerar client/dist/Private Sharing Setup 1.0.0.exe
 - **Mesh puro**: cada watcher abre uma conexão P2P direta com quem
   compartilha. Bom pra grupos pequenos; escala mal além disso (migrar pra
   um SFU tipo mediasoup/LiveKit se precisar).
-- **Sem TURN**: só STUN público do Google. Redes com NAT/CGNAT restritivo
-  podem falhar a conexão direta — adicionar TURN (coturn, metered.ca) em
-  `ICE_SERVERS` (`client/src/renderer/webrtc.js`) resolve.
+- **Sem TURN por padrão**: usa só STUN público do Google. Redes com
+  NAT/CGNAT restritivo podem falhar a conexão direta — a tela de
+  Configurações tem a opção "STUN + TURN próprio" pra apontar um servidor
+  TURN (coturn, metered.ca) sem mexer em código.
 - **Áudio do sistema**: depende do usuário marcar a opção certa no seletor
   nativo do Windows ao compartilhar.

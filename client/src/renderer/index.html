@@ -3,48 +3,251 @@
 <head>
   <meta charset="UTF-8" />
   <title>Private Sharing</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="ds/styles.css" />
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
-  <section id="lobby">
-    <div class="lobbyCard">
+
+  <div id="lobbyScreen" class="screen">
+    <div class="lobbyHero">
+      <span class="lobbyKicker">Sem cadastro · ponto a ponto</span>
       <h1>Private Sharing</h1>
-      <input id="lobbyNameInput" placeholder="Seu nome" />
+      <p class="lobbyLede">Compartilhe sua tela dentro de uma sala privada. O vídeo vai direto de uma máquina para a outra — o servidor só apresenta os dois lados.</p>
 
-      <div class="joinRow">
-        <input id="roomCodeInput" placeholder="Código da sala" />
-        <button id="joinRoomBtn">Entrar</button>
-      </div>
-      <button id="createRoomBtn">Criar sala nova</button>
-
-      <h2>Salas ativas</h2>
-      <ul id="roomList"></ul>
+      <ul class="lobbyFeatures">
+        <li><span class="mark"></span><div><h6>Só quem tem o código entra</h6><p>Salas efêmeras, criadas em um clique.</p></div></li>
+        <li><span class="mark"></span><div><h6>Vídeo direto entre os participantes</h6><p>WebRTC; o servidor não vê a sua tela.</p></div></li>
+        <li><span class="mark"></span><div><h6>Feito para grupos pequenos</h6><p>Melhor até quatro ou cinco pessoas por sala.</p></div></li>
+      </ul>
     </div>
-  </section>
 
-  <section id="roomScreen" hidden>
-    <header>
-      <h1><span id="roomCodeLabel"></span></h1>
-      <div class="me">
-        <input id="nameInput" placeholder="Seu nome" />
-        <button id="shareBtn">Compartilhar minha tela</button>
-        <button id="leaveRoomBtn">Sair da sala</button>
+    <div class="lobbyPanel">
+      <div class="card elev-md">
+        <h4>Entrar numa sala</h4>
+
+        <div class="field">
+          <label>Seu nome</label>
+          <input class="input" id="lobbyNameInput" placeholder="Seu nome" />
+        </div>
+
+        <div class="field">
+          <label>Código da sala</label>
+          <div class="joinRow">
+            <input class="input mono" id="roomCodeInput" placeholder="9dgt57" style="letter-spacing:.22em" />
+            <button class="btn btn-primary" id="joinRoomBtn">Entrar</button>
+          </div>
+        </div>
+
+        <div class="orDivider">ou</div>
+
+        <button class="btn btn-secondary btn-block" id="createRoomBtn">Criar sala nova</button>
       </div>
-    </header>
 
-    <main>
-      <section id="peopleList">
-        <h2>Quem está na sala</h2>
-        <ul id="peers"></ul>
-      </section>
+      <div>
+        <h6>Salas ativas</h6>
+        <div id="roomList" class="roomListEl"></div>
+      </div>
 
-      <section id="viewer">
-        <h2 id="viewerTitle">Ninguém sendo assistido</h2>
-        <video id="remoteVideo" autoplay playsinline></video>
-      </section>
-    </main>
-  </section>
+      <div class="signalStatus">
+        <span class="statusDot" id="signalDot"></span>
+        <span id="signalStatusText">Conectando…</span>
+        <span class="mono" id="signalUrlLabel"></span>
+      </div>
+    </div>
+  </div>
 
+  <div id="createDialog" class="dialog-backdrop" hidden>
+    <div class="dialog">
+      <div>
+        <div class="dialog-title">Criar sala nova</div>
+        <div class="codeRow">
+          <span class="text-muted">Código gerado</span>
+          <span class="mono accent" id="generatedCode" style="font-size:15px;letter-spacing:.18em"></span>
+          <button class="btn btn-ghost" id="regenCodeBtn">Gerar outro</button>
+        </div>
+      </div>
+
+      <div>
+        <h6>Acesso</h6>
+        <div class="radioStack">
+          <label class="radio align-start">
+            <input type="radio" name="acesso" id="radioSemSenha" checked /><span class="dot"></span>
+            <span><span class="radioTitle">Aberta com o código</span><span class="radioSub">Quem tiver o código entra direto.</span></span>
+          </label>
+          <label class="radio align-start">
+            <input type="radio" name="acesso" id="radioComSenha" /><span class="dot"></span>
+            <span><span class="radioTitle">Protegida por senha</span><span class="radioSub">Além do código, pede uma senha na entrada.</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="createPasswordField" hidden>
+        <label>Senha da sala</label>
+        <input class="input" type="password" id="roomPasswordInput" />
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" id="cancelCreateBtn">Cancelar</button>
+        <button class="btn btn-primary" id="confirmCreateBtn">Criar e entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="passwordDialog" class="dialog-backdrop" hidden>
+    <div class="dialog">
+      <div class="dialog-title">Essa sala tem senha</div>
+      <div class="field">
+        <label>Senha da sala</label>
+        <input class="input" type="password" id="joinPasswordInput" />
+      </div>
+      <p class="text-muted" id="passwordError" hidden>Senha incorreta.</p>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" id="cancelPasswordBtn">Cancelar</button>
+        <button class="btn btn-primary" id="confirmPasswordBtn">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="roomScreen" class="screen" hidden>
+    <div class="rail">
+      <button class="railBtn active" id="railTelas" title="Telas">
+        <svg width="17" height="17" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><path d="M9 21h6" stroke="currentColor" stroke-width="1.4"></path></svg>
+      </button>
+      <button class="railBtn" id="railPessoas" title="Pessoas">
+        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5M16 6.2a3 3 0 010 5.6M18 15c2 .8 3 2.2 3 4" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>
+      </button>
+      <button class="railBtn" id="railChat" title="Chat">
+        <svg width="17" height="17" viewBox="0 0 24 24"><path d="M4 5h16v11h-9l-4 3.5V16H4z" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>
+      </button>
+      <button class="railBtn railBtnBottom" id="openConfigBtn" title="Configurações">
+        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.4"></circle><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 3"></circle></svg>
+      </button>
+    </div>
+
+    <div class="roomMain">
+      <div class="roomHeader">
+        <div>
+          <div class="roomHeaderKicker">Sala privada</div>
+          <div class="roomHeaderCode">
+            <h3 class="mono accent" id="roomCodeText"></h3>
+            <button class="btn btn-ghost" id="copyCodeBtn">Copiar código</button>
+          </div>
+        </div>
+        <div class="roomHeaderActions">
+          <span class="tag tag-neutral" id="streamsTag"></span>
+          <button class="btn btn-primary" id="shareBtn">Compartilhar minha tela</button>
+          <button class="btn btn-secondary" id="leaveRoomBtn">Sair</button>
+        </div>
+      </div>
+
+      <div id="roomBody" class="roomBody">
+        <div id="configView" class="configView" hidden>
+          <div>
+            <h4>Configurações</h4>
+            <p class="text-muted">Valem para todas as salas deste computador.</p>
+          </div>
+
+          <div>
+            <h6>Servidor de sinalização</h6>
+            <div class="field">
+              <label>Endereço WSS</label>
+              <div class="joinRow">
+                <input class="input mono" id="signalUrlInput" style="font-size:13px" />
+                <button class="btn btn-secondary" id="testSignalBtn">Testar</button>
+              </div>
+            </div>
+            <div class="signalStatus" id="testSignalResult"></div>
+          </div>
+
+          <div>
+            <h6>Travessia de NAT</h6>
+            <div class="segRow">
+              <label class="radio"><input type="radio" name="ice" id="iceStunOnly" /><span class="dot"></span>Só STUN público</label>
+              <label class="radio"><input type="radio" name="ice" id="iceStunTurn" /><span class="dot"></span>STUN + TURN próprio</label>
+            </div>
+            <div class="field" id="turnFields" hidden>
+              <label>Servidor TURN</label>
+              <input class="input mono" id="turnHostInput" placeholder="turn:host:3478" style="font-size:13px;margin-bottom:8px" />
+              <label>Usuário</label>
+              <input class="input" id="turnUserInput" style="margin-bottom:8px" />
+              <label>Senha</label>
+              <input class="input" type="password" id="turnPassInput" />
+            </div>
+            <p class="text-muted" style="font-size:12px;margin-top:8px">Sem TURN, redes com CGNAT restritivo podem não fechar a conexão direta.</p>
+          </div>
+
+          <div>
+            <h6>Áudio ao compartilhar</h6>
+            <div class="seg" id="audioModeSeg">
+              <label class="seg-opt"><input type="radio" name="audio" value="system" />Áudio do sistema</label>
+              <label class="seg-opt"><input type="radio" name="audio" value="mic" />Microfone</label>
+              <label class="seg-opt"><input type="radio" name="audio" value="none" />Sem áudio</label>
+            </div>
+          </div>
+
+          <div class="configActions">
+            <button class="btn btn-primary" id="saveConfigBtn">Salvar</button>
+            <button class="btn btn-secondary" id="cancelConfigBtn">Cancelar</button>
+          </div>
+        </div>
+
+        <div id="emptyView" class="centeredView" hidden>
+          <svg width="44" height="44" viewBox="0 0 24 24" style="color:var(--color-neutral-800)"><rect x="2" y="4" width="20" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.1"></rect><path d="M9 21h6M12 17v4" stroke="currentColor" stroke-width="1.1"></path></svg>
+          <div class="centeredTitle">Ninguém está compartilhando</div>
+          <p class="text-muted">Assim que alguém da sala começar, a tela aparece aqui. Você também pode começar.</p>
+          <button class="btn btn-primary" id="emptyShareBtn">Compartilhar minha tela</button>
+          <div class="inviteHint"><span class="mono accent" id="emptyRoomCode"></span><span>é o código para convidar alguém</span></div>
+        </div>
+
+        <div id="errorView" class="centeredView errorView" hidden>
+          <span class="spinner"></span>
+          <div class="centeredTitle">Reconectando à sala</div>
+          <p class="text-muted" id="errorText"></p>
+          <div class="errorActions">
+            <button class="btn btn-primary" id="retryNowBtn">Tentar agora</button>
+            <button class="btn btn-secondary" id="errorConfigBtn">Abrir configurações</button>
+          </div>
+          <p class="text-muted" style="font-size:12px">Se a rede usa NAT restritivo, um servidor TURN resolve. O servidor de sinalização continua respondendo.</p>
+        </div>
+
+        <div id="mosaicView" class="mosaicView" hidden></div>
+      </div>
+
+      <div id="sharingBanner" class="sharingBanner" hidden>
+        <span class="sharingLive"><span class="liveDot"></span>você está compartilhando</span>
+        <span class="sharingMeta" id="sharingMeta"></span>
+        <div class="sharingActions">
+          <button class="btn btn-secondary" id="switchScreenBtn">Trocar tela</button>
+          <button class="btn btn-secondary" id="stopShareBtn">Parar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebarPeople">
+        <h6 id="peopleHeading">Na sala</h6>
+        <div id="peers" class="peersList"></div>
+      </div>
+
+      <div class="card elev-sm sidebarStats">
+        <h6>Conexão</h6>
+        <div class="statRow"><span>Rota</span><span id="statRoute">—</span></div>
+        <div class="statRow"><span>Latência</span><span id="statPing">—</span></div>
+        <div class="statRow"><span>Perda</span><span id="statLoss">—</span></div>
+        <div class="statRow"><span>Sinalização</span><span id="statSignal">—</span></div>
+      </div>
+
+      <div class="sidebarChat">
+        <div class="chatHeading"><h6>Conversa</h6><span>só nesta sala</span></div>
+        <div id="chatMessages" class="chatMessages"></div>
+        <div class="chatInputRow">
+          <input class="input" id="chatInput" placeholder="Escrever mensagem" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
   <script src="signaling.js"></script>
   <script src="webrtc.js"></script>
   <script src="renderer.js"></script>

@@ -1,0 +1,677 @@
+[hidden] {
+  display: none !important;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+.mono {
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.accent {
+  color: var(--color-accent-300);
+}
+
+/* ---------- lobby ---------- */
+
+#lobbyScreen {
+  display: grid;
+  grid-template-columns: 1fr 452px;
+  height: 100vh;
+}
+
+.lobbyHero {
+  padding: 64px 40px 32px 56px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lobbyKicker {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.lobbyLede {
+  max-width: 400px;
+  color: var(--color-neutral-400);
+  font-size: 15px;
+}
+
+.lobbyFeatures {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 420px;
+  list-style: none;
+  padding: 0;
+}
+
+.lobbyFeatures li {
+  display: flex;
+  gap: 14px;
+}
+
+.lobbyFeatures .mark {
+  width: 18px;
+  height: 2px;
+  background: var(--color-accent);
+  margin-top: 9px;
+  flex: none;
+}
+
+.lobbyFeatures h6 {
+  margin: 0;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text);
+}
+
+.lobbyFeatures p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--color-neutral-600);
+}
+
+.lobbyPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: 32px 56px 32px 0;
+}
+
+.joinRow {
+  display: flex;
+  gap: 8px;
+}
+
+.joinRow .input {
+  flex: 1;
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: var(--space-4) 0;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+}
+
+.orDivider::before, .orDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-divider);
+}
+
+.roomListEl {
+  display: flex;
+  flex-direction: column;
+}
+
+.roomRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.roomLock {
+  display: flex;
+  color: var(--color-neutral-700);
+}
+
+.roomLock.locked {
+  color: var(--color-accent);
+}
+
+.roomCode {
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+
+.roomMeta {
+  font-size: 12px;
+}
+
+.roomEnterBtn {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.signalStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-neutral-600);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-neutral-700);
+}
+
+.statusDot.on {
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+}
+
+/* ---------- dialogs ---------- */
+
+.codeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.radioTitle {
+  display: block;
+  font-size: 13px;
+}
+
+.radioSub {
+  display: block;
+  font-size: 12px;
+  color: var(--color-neutral-600);
+}
+
+.radioStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio.align-start {
+  align-items: flex-start;
+}
+
+.radio.align-start .dot {
+  margin-top: 3px;
+}
+
+/* ---------- sala ---------- */
+
+#roomScreen {
+  display: grid;
+  grid-template-columns: 60px 1fr 288px;
+  height: 100vh;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  border-right: 1px solid var(--color-divider);
+}
+
+.railBtn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  color: var(--color-neutral-600);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.railBtn:hover {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  color: var(--color-text);
+}
+
+.railBtn.active {
+  background: var(--color-accent-800);
+  color: var(--color-accent-300);
+}
+
+.railBtnBottom {
+  margin-top: auto;
+}
+
+.roomMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 20px;
+  overflow: hidden;
+}
+
+.roomHeader {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.roomHeaderKicker {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+  margin-bottom: 4px;
+}
+
+.roomHeaderCode {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.roomHeaderCode h3 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.18em;
+}
+
+.roomHeaderActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roomBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.centeredView {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--color-divider);
+}
+
+.centeredTitle {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 20px;
+}
+
+.centeredView p {
+  max-width: 380px;
+}
+
+.inviteHint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-neutral-700);
+}
+
+.errorView {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  background: radial-gradient(80% 60% at 50% 40%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent);
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+  border-top-color: var(--color-accent);
+  animation: ps-spin 1s linear infinite;
+}
+
+@keyframes ps-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ps-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.errorActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.mosaicView {
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tile {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--color-surface), var(--color-bg));
+  box-shadow: 0 0 0 1px var(--color-divider);
+  aspect-ratio: 16 / 9;
+}
+
+.tile.live {
+  box-shadow: 0 0 0 1.5px var(--color-accent);
+}
+
+.tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.tileBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+  font-size: 12px;
+}
+
+.tileBadge .liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: ps-live 1.8s ease-in-out infinite;
+}
+
+.tileMeta {
+  color: var(--color-neutral-600);
+}
+
+.tileActions {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.tileActions .btn {
+  background: color-mix(in srgb, var(--color-bg) 75%, transparent);
+}
+
+.sharingBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.sharingLive {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.sharingLive .liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: ps-live 1.8s ease-in-out infinite;
+}
+
+.sharingMeta {
+  font-size: 12px;
+  color: var(--color-neutral-400);
+}
+
+.sharingActions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- sidebar ---------- */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--color-divider);
+}
+
+.sidebarPeople {
+  flex: none;
+  max-height: 40%;
+  overflow-y: auto;
+  padding: 16px 16px 12px;
+}
+
+.peersList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.peerRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: var(--radius-md);
+}
+
+.peerRow.me {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.peerAvatar {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 11px;
+  background: var(--color-neutral-800);
+  color: var(--color-neutral-200);
+}
+
+.peerAvatar.accent {
+  background: var(--color-accent-800);
+  color: var(--color-accent-200);
+}
+
+.peerName {
+  font-size: 13px;
+}
+
+.peerStatus {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-neutral-600);
+}
+
+.sidebarStats {
+  margin: 4px 16px 12px;
+}
+
+.statRow {
+  display: flex;
+  font-size: 12px;
+  color: var(--color-neutral-400);
+}
+
+.statRow span:first-child {
+  color: var(--color-neutral-600);
+}
+
+.statRow span:last-child {
+  margin-left: auto;
+}
+
+.sidebarChat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-divider);
+}
+
+.chatHeading {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px 8px;
+}
+
+.chatHeading span {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-neutral-700);
+}
+
+.chatMessages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px;
+  overflow-y: auto;
+}
+
+.chatMsgMeta {
+  font-size: 11px;
+  color: var(--color-neutral-600);
+  margin-bottom: 3px;
+}
+
+.chatMsgBubble {
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.chatMsgBubble.me {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.chatInputRow {
+  flex: none;
+  padding: 10px 16px 14px;
+}
+
+/* ---------- configurações ---------- */
+
+.configView {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 620px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.segRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.configActions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* ---------- seletor de fonte (picker.html) ---------- */
+
+.pickerBody {
+  padding: 20px;
+}
+
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sourceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.sourceBtn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text);
+}
+
+.sourceBtn:hover {
+  border-color: var(--color-accent);
+}
+
+.sourceBtn img {
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
+  background: #000;
+  border-radius: 4px;
+}
+
+.sourceBtn span {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

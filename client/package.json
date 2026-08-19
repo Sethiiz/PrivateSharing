@@ -18,11 +18,16 @@
     "files": [
       "src/main/main.js",
       "src/main/preload.js",
+      "src/main/picker-preload.js",
       "src/renderer/index.html",
+      "src/renderer/picker.html",
+      "src/renderer/settings.js",
       "src/renderer/signaling.js",
       "src/renderer/webrtc.js",
       "src/renderer/renderer.js",
-      "src/renderer/style.css"
+      "src/renderer/picker.js",
+      "src/renderer/app.css",
+      "src/renderer/ds/styles.css"
     ],
     "win": {
       "target": "nsis"

@@ -1,12 +1,10 @@
-// Troque pela URL do servidor de sinalização (wss:// se ele tiver HTTPS).
-const SIGNAL_URL = 'wss://SEU-SERVIDOR-AQUI.onrender.com';
-
 window.TDG = window.TDG || {};
 
 TDG.signaling = (() => {
   let ws;
   let myId = null;
   let currentRoomId = null;
+  let currentPassword = null;
   const listeners = new Map();
 
   function on(type, cb) {
@@ -23,10 +21,16 @@ TDG.signaling = (() => {
   }
 
   function connect() {
-    ws = new WebSocket(SIGNAL_URL);
+    if (ws) {
+      ws.onclose = null;
+      ws.close();
+    }
+    ws = new WebSocket(TDG.settings.getSignalUrl());
+    emit('connecting');
 
     ws.onopen = () => {
-      if (currentRoomId) send({ type: 'join-room', roomId: currentRoomId, name: TDG.signaling.myName() });
+      emit('connected');
+      if (currentRoomId) send({ type: 'join-room', roomId: currentRoomId, name: myName, password: currentPassword });
     };
 
     ws.onmessage = (event) => {
@@ -37,16 +41,23 @@ TDG.signaling = (() => {
       } else if (msg.type === 'joined') {
         currentRoomId = msg.roomId;
         emit('joined', msg);
+      } else if (msg.type === 'join-error') {
+        emit('join-error', msg);
       } else if (msg.type === 'room-list') {
         emit('room-list', msg);
       } else if (msg.type === 'presence') {
         emit('presence', msg);
+      } else if (msg.type === 'chat') {
+        emit('chat', msg);
       } else if (msg.type === 'signal') {
         emit('signal', msg);
       }
     };
 
-    ws.onclose = () => setTimeout(connect, 2000);
+    ws.onclose = () => {
+      emit('disconnected');
+      setTimeout(connect, 2000);
+    };
     ws.onerror = () => ws.close();
   }
 
@@ -62,16 +73,21 @@ TDG.signaling = (() => {
       myName = name;
       localStorage.setItem('name', myName);
     },
-    joinRoom(roomId) {
-      send({ type: 'join-room', roomId, name: myName });
+    joinRoom(roomId, password) {
+      currentPassword = password || null;
+      send({ type: 'join-room', roomId, name: myName, password: currentPassword });
     },
     leaveRoom() {
       currentRoomId = null;
+      currentPassword = null;
       send({ type: 'leave-room' });
     },
     setName(name) {
       TDG.signaling.setMyName(name);
       send({ type: 'set-name', name });
+    },
+    sendChat(text) {
+      send({ type: 'chat', text });
     },
   };
 })();

@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const http = require('http');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 8080;
 const server = http.createServer((req, res) => {
@@ -10,7 +11,7 @@ const wss = new WebSocket.Server({ server });
 
 // clientId -> { ws, name, roomId, broadcasting }
 const clients = new Map();
-// roomId -> Set<clientId>
+// roomId -> { members: Set<clientId>, passwordHash: string|null }
 const rooms = new Map();
 let nextId = 1;
 
@@ -22,14 +23,20 @@ function sanitizeRoomId(raw) {
     .slice(0, 30);
 }
 
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(String(password)).digest('hex');
+}
+
 function roomMembers(roomId) {
-  return [...(rooms.get(roomId) || [])]
-    .map((id) => clients.get(id))
-    .filter(Boolean);
+  const room = rooms.get(roomId);
+  if (!room) return [];
+  return [...room.members].map((id) => clients.get(id)).filter(Boolean);
 }
 
 function broadcastPresence(roomId) {
-  const list = [...(rooms.get(roomId) || [])].map((id) => {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  const list = [...room.members].map((id) => {
     const c = clients.get(id);
     return { id, name: c.name, broadcasting: c.broadcasting };
   });
@@ -40,9 +47,10 @@ function broadcastPresence(roomId) {
 }
 
 function broadcastRoomList() {
-  const list = [...rooms.entries()].map(([id, members]) => ({
+  const list = [...rooms.entries()].map(([id, room]) => ({
     id,
-    count: members.size,
+    count: room.members.size,
+    hasPassword: !!room.passwordHash,
   }));
   const msg = JSON.stringify({ type: 'room-list', rooms: list });
   for (const c of clients.values()) {
@@ -50,17 +58,28 @@ function broadcastRoomList() {
   }
 }
 
-function joinRoom(id, rawRoomId) {
+function joinRoom(id, rawRoomId, password) {
   const me = clients.get(id);
   if (!me) return;
 
   const roomId = sanitizeRoomId(rawRoomId);
   if (!roomId) return;
 
+  const existing = rooms.get(roomId);
+  if (existing && existing.passwordHash && existing.passwordHash !== hashPassword(password)) {
+    me.ws.send(JSON.stringify({ type: 'join-error', reason: 'wrong-password' }));
+    return;
+  }
+
   leaveRoom(id);
 
-  if (!rooms.has(roomId)) rooms.set(roomId, new Set());
-  rooms.get(roomId).add(id);
+  if (!existing) {
+    rooms.set(roomId, {
+      members: new Set(),
+      passwordHash: password ? hashPassword(password) : null,
+    });
+  }
+  rooms.get(roomId).members.add(id);
   me.roomId = roomId;
 
   me.ws.send(JSON.stringify({ type: 'joined', roomId }));
@@ -76,10 +95,10 @@ function leaveRoom(id) {
   me.roomId = null;
   me.broadcasting = false;
 
-  const members = rooms.get(oldRoomId);
-  if (members) {
-    members.delete(id);
-    if (members.size === 0) rooms.delete(oldRoomId);
+  const room = rooms.get(oldRoomId);
+  if (room) {
+    room.members.delete(id);
+    if (room.members.size === 0) rooms.delete(oldRoomId);
   }
 
   broadcastPresence(oldRoomId);
@@ -105,7 +124,7 @@ wss.on('connection', (ws) => {
     switch (msg.type) {
       case 'join-room':
         me.name = String(msg.name || me.name).slice(0, 40);
-        joinRoom(id, msg.roomId);
+        joinRoom(id, msg.roomId, msg.password);
         break;
 
       case 'leave-room':
@@ -128,6 +147,23 @@ wss.on('connection', (ws) => {
         me.broadcasting = false;
         broadcastPresence(me.roomId);
         break;
+
+      case 'chat': {
+        if (me.roomId === null) return;
+        const text = String(msg.text || '').slice(0, 500).trim();
+        if (!text) return;
+        const chatMsg = JSON.stringify({
+          type: 'chat',
+          from: id,
+          name: me.name,
+          text,
+          at: Date.now(),
+        });
+        for (const c of roomMembers(me.roomId)) {
+          if (c.ws.readyState === WebSocket.OPEN) c.ws.send(chatMsg);
+        }
+        break;
+      }
 
       case 'signal': {
         const target = clients.get(msg.to);
