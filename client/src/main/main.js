@@ -1,5 +1,7 @@
 const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron');
 const path = require('path');
+const { execFile } = require('child_process');
+const audioMixer = require(path.join(__dirname, '..', '..', 'native', 'audio_mixer'));
 
 let mainWindow;
 
@@ -35,7 +37,7 @@ function pickSource() {
   return new Promise((resolve) => {
     const picker = new BrowserWindow({
       width: 640,
-      height: 440,
+      height: 540,
       parent: mainWindow,
       modal: true,
       resizable: false,
@@ -66,7 +68,12 @@ function pickSource() {
         types: ['screen', 'window'],
         thumbnailSize: { width: 300, height: 200 },
       });
-      return sources.map((s) => ({ id: s.id, name: s.name, thumbnail: s.thumbnail.toDataURL() }));
+      return sources.map((s) => ({
+        id: s.id,
+        name: s.name,
+        thumbnail: s.thumbnail.toDataURL(),
+        type: s.id.startsWith('screen:') ? 'screen' : 'window',
+      }));
     });
 
     const onChoose = async (event, sourceId) => {
@@ -83,6 +90,72 @@ function pickSource() {
     picker.loadFile(path.join(__dirname, '..', 'renderer', 'picker.html'));
   });
 }
+
+// ---------- mixer de áudio por app ----------
+
+function resolveProcessInfo(pids) {
+  return new Promise((resolve) => {
+    if (pids.length === 0) return resolve([]);
+    const script = `Get-Process -Id ${pids.join(',')} -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path | ConvertTo-Json -Compress`;
+    execFile(
+      'powershell',
+      ['-NoProfile', '-NonInteractive', '-Command', script],
+      { windowsHide: true, timeout: 5000 },
+      (err, stdout) => {
+        if (err || !stdout || !stdout.trim()) return resolve([]);
+        try {
+          const parsed = JSON.parse(stdout);
+          resolve(Array.isArray(parsed) ? parsed : [parsed]);
+        } catch {
+          resolve([]);
+        }
+      }
+    );
+  });
+}
+
+async function listAudioSessions() {
+  const pids = audioMixer.listSessions();
+  const infos = await resolveProcessInfo(pids);
+  const results = [];
+  for (const info of infos) {
+    if (!info || !info.Id) continue;
+    // Nunca inclui o próprio app (main, renderer, GPU, utility rodam do mesmo
+    // executável) — evita microfonia e não dá nem a opção de desmutar.
+    if (info.Path && path.normalize(info.Path).toLowerCase() === path.normalize(process.execPath).toLowerCase()) {
+      continue;
+    }
+    let icon = null;
+    if (info.Path) {
+      try {
+        const img = await app.getFileIcon(info.Path, { size: 'normal' });
+        icon = img.toDataURL();
+      } catch {
+        icon = null;
+      }
+    }
+    results.push({ pid: info.Id, name: info.ProcessName || `pid ${info.Id}`, icon });
+  }
+  return results;
+}
+
+ipcMain.handle('audio-mixer:list-sessions', () => listAudioSessions());
+
+ipcMain.on('audio-mixer:start', (event, pid) => {
+  audioMixer.startCapture(pid, (samples) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('audio-mixer:chunk', { pid, samples });
+    }
+  });
+});
+
+ipcMain.on('audio-mixer:stop', (event, pid) => {
+  audioMixer.stopCapture(pid);
+});
+
+ipcMain.on('audio-mixer:stop-all', () => {
+  audioMixer.stopAll();
+});
 
 app.whenReady().then(() => {
   // useSystemPicker usa o seletor nativo do Windows/macOS quando disponível
@@ -105,5 +178,6 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  audioMixer.stopAll();
   if (process.platform !== 'darwin') app.quit();
 });

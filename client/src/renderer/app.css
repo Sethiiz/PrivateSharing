@@ -210,9 +210,15 @@ body {
 /* ---------- sala ---------- */
 
 #roomScreen {
+  position: relative;
   display: grid;
   grid-template-columns: 60px 1fr 288px;
   height: 100vh;
+  transition: grid-template-columns 0.2s ease;
+}
+
+#roomScreen.sidebar-collapsed {
+  grid-template-columns: 60px 1fr 0px;
 }
 
 .rail {
@@ -251,11 +257,47 @@ body {
 }
 
 .roomMain {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   padding: 18px 20px;
   overflow: hidden;
+}
+
+.broadcastBanners {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.broadcastBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px 9px 12px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  pointer-events: auto;
+}
+
+.broadcastBannerText {
+  font-size: 13px;
+}
+
+.broadcastBannerActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
 }
 
 .roomHeader {
@@ -466,13 +508,115 @@ body {
   gap: 8px;
 }
 
+/* ---------- áudio por app ---------- */
+
+.audioMixerDialog {
+  width: min(420px, 100%);
+}
+
+.audioMixerGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.audioMixerCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.audioMixerCell:hover {
+  border-color: var(--color-accent);
+}
+
+.audioMixerCell.blocked {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444 inset;
+}
+
+.audioMixerCell img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.audioMixerCellFallback {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--color-neutral-800);
+  color: var(--color-neutral-200);
+  font-size: 14px;
+}
+
+.audioMixerCell span:last-child {
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 /* ---------- sidebar ---------- */
 
 .sidebar {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
   border-left: 1px solid var(--color-divider);
+}
+
+#roomScreen.sidebar-collapsed .sidebar {
+  border-left: none;
+}
+
+.sidebarToggleBtn {
+  position: absolute;
+  top: 50%;
+  right: 277px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  color: var(--color-neutral-600);
+  cursor: pointer;
+  z-index: 6;
+  transition: right 0.2s ease;
+}
+
+#roomScreen.sidebar-collapsed .sidebarToggleBtn {
+  right: -11px;
+}
+
+.sidebarToggleBtn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.sidebarToggleBtn svg {
+  transition: transform 0.2s ease;
+}
+
+#roomScreen.sidebar-collapsed .sidebarToggleBtn svg {
+  transform: rotate(180deg);
 }
 
 .sidebarPeople {
@@ -653,7 +797,11 @@ body {
 /* ---------- seletor de fonte (picker.html) ---------- */
 
 .pickerBody {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   padding: 20px;
+  overflow: hidden;
 }
 
 .pickerHeader {
@@ -663,15 +811,33 @@ body {
   margin-bottom: 16px;
 }
 
+.pickerScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sourceSection + .sourceSection {
+  margin-top: 20px;
+}
+
+.sourceSectionTitle {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+}
+
 .sourceGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  max-height: 340px;
-  overflow-y: auto;
 }
 
 .sourceBtn {
+  min-width: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-md);

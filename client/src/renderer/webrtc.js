@@ -42,16 +42,11 @@ TDG.webrtc = (() => {
     }
   }
 
-  async function captureDisplay() {
-    const audioMode = TDG.settings.getAudioMode();
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints(), audio: audioMode === 'system' });
-    if (audioMode === 'mic') {
-      try {
-        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mic.getAudioTracks().forEach((t) => stream.addTrack(t));
-      } catch (err) {
-        console.warn('Não foi possível capturar o microfone:', err);
-      }
+  async function captureDisplay({ withAudio = true } = {}) {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints(), audio: false });
+    if (withAudio) {
+      const audioTrack = await TDG.audioMixer.start();
+      if (audioTrack) stream.addTrack(audioTrack);
     }
     return stream;
   }
@@ -68,7 +63,7 @@ TDG.webrtc = (() => {
 
   async function switchScreen() {
     if (!sharing) return;
-    const newStream = await captureDisplay();
+    const newStream = await captureDisplay({ withAudio: false });
     const newVideoTrack = newStream.getVideoTracks()[0];
 
     for (const pc of broadcastConnections.values()) {
@@ -93,6 +88,7 @@ TDG.webrtc = (() => {
       localStream.getTracks().forEach((t) => t.stop());
       localStream = null;
     }
+    TDG.audioMixer.stop();
     for (const pc of broadcastConnections.values()) pc.close();
     broadcastConnections.clear();
     watcherCount = 0;

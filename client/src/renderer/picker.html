@@ -11,7 +11,16 @@
     <h4>Escolher o que compartilhar</h4>
     <button class="btn btn-secondary" id="cancelBtn">Cancelar</button>
   </div>
-  <div id="sourceGrid" class="sourceGrid"></div>
+  <div class="pickerScroll">
+    <div class="sourceSection" id="screenSection" hidden>
+      <h6 class="sourceSectionTitle">Monitores</h6>
+      <div id="screenGrid" class="sourceGrid"></div>
+    </div>
+    <div class="sourceSection" id="windowSection" hidden>
+      <h6 class="sourceSectionTitle">Aplicativos</h6>
+      <div id="windowGrid" class="sourceGrid"></div>
+    </div>
+  </div>
   <script src="picker.js"></script>
 </body>
 </html>

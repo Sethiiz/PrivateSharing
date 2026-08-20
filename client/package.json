@@ -9,8 +9,11 @@
     "dist": "electron-builder --win"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.2.0",
     "electron": "^31.0.0",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "node-addon-api": "^8.9.2",
+    "node-gyp": "^13.0.1"
   },
   "build": {
     "appId": "com.amigos.privatesharing",
@@ -25,9 +28,13 @@
       "src/renderer/signaling.js",
       "src/renderer/webrtc.js",
       "src/renderer/renderer.js",
+      "src/renderer/audiomixer.js",
       "src/renderer/picker.js",
       "src/renderer/app.css",
-      "src/renderer/ds/styles.css"
+      "src/renderer/ds/styles.css",
+      "native/audio_mixer/index.js",
+      "native/audio_mixer/package.json",
+      "native/audio_mixer/build/Release/audio_mixer.node"
     ],
     "win": {
       "target": "nsis"

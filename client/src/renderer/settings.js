@@ -29,10 +29,10 @@ TDG.settings = (() => {
       localStorage.setItem('turnPass', pass || '');
     },
 
-    getAudioMode: () => get('audioMode', 'system'),
-    setAudioMode: (mode) => localStorage.setItem('audioMode', mode),
-
     getShareQuality: () => get('shareQuality', 'standard'),
     setShareQuality: (quality) => localStorage.setItem('shareQuality', quality),
+
+    getSidebarCollapsed: () => get('sidebarCollapsed', 'false') === 'true',
+    setSidebarCollapsed: (collapsed) => localStorage.setItem('sidebarCollapsed', String(!!collapsed)),
   };
 })();

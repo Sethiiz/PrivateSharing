@@ -113,12 +113,6 @@
       <button class="railBtn active" id="railTelas" title="Telas">
         <svg width="17" height="17" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><path d="M9 21h6" stroke="currentColor" stroke-width="1.4"></path></svg>
       </button>
-      <button class="railBtn" id="railPessoas" title="Pessoas">
-        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5M16 6.2a3 3 0 010 5.6M18 15c2 .8 3 2.2 3 4" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>
-      </button>
-      <button class="railBtn" id="railChat" title="Chat">
-        <svg width="17" height="17" viewBox="0 0 24 24"><path d="M4 5h16v11h-9l-4 3.5V16H4z" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>
-      </button>
       <button class="railBtn railBtnBottom" id="openConfigBtn" title="Configurações">
         <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.4"></circle><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 3"></circle></svg>
       </button>
@@ -139,6 +133,8 @@
           <button class="btn btn-secondary" id="leaveRoomBtn">Sair</button>
         </div>
       </div>
+
+      <div id="broadcastBanners" class="broadcastBanners"></div>
 
       <div id="roomBody" class="roomBody">
         <div id="configView" class="configView" hidden>
@@ -174,15 +170,6 @@
               <input class="input" type="password" id="turnPassInput" />
             </div>
             <p class="text-muted" style="font-size:12px;margin-top:8px">Sem TURN, redes com CGNAT restritivo podem não fechar a conexão direta.</p>
-          </div>
-
-          <div>
-            <h6>Áudio ao compartilhar</h6>
-            <div class="seg" id="audioModeSeg">
-              <label class="seg-opt"><input type="radio" name="audio" value="system" />Áudio do sistema</label>
-              <label class="seg-opt"><input type="radio" name="audio" value="mic" />Microfone</label>
-              <label class="seg-opt"><input type="radio" name="audio" value="none" />Sem áudio</label>
-            </div>
           </div>
 
           <div>
@@ -227,11 +214,28 @@
         <span class="sharingLive"><span class="liveDot"></span>você está compartilhando</span>
         <span class="sharingMeta" id="sharingMeta"></span>
         <div class="sharingActions">
+          <button class="btn btn-secondary" id="audioMixerBtn">Áudio por app</button>
           <button class="btn btn-secondary" id="switchScreenBtn">Trocar tela</button>
           <button class="btn btn-secondary" id="stopShareBtn">Parar</button>
         </div>
       </div>
     </div>
+
+    <div id="audioMixerDialog" class="dialog-backdrop" hidden>
+      <div class="dialog audioMixerDialog">
+        <div class="dialog-title">Áudio por app</div>
+        <p class="text-muted" style="font-size:13px">Clique num app pra bloquear o áudio dele na transmissão.</p>
+        <div id="audioMixerGrid" class="audioMixerGrid"></div>
+        <p class="text-muted" id="audioMixerEmpty" style="font-size:13px" hidden>Nenhum app com áudio ativo no momento.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" id="closeAudioMixerBtn">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="sidebarToggleBtn" id="sidebarToggleBtn" title="Recolher painel">
+      <svg width="12" height="12" viewBox="0 0 16 16"><path d="M10 2L4 8l6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
 
     <div class="sidebar">
       <div class="sidebarPeople">
@@ -259,6 +263,7 @@
 
   <script src="settings.js"></script>
   <script src="signaling.js"></script>
+  <script src="audiomixer.js"></script>
   <script src="webrtc.js"></script>
   <script src="renderer.js"></script>
 </body>

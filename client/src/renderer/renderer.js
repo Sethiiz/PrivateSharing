@@ -1,4 +1,4 @@
-const { signaling, webrtc, settings } = TDG;
+const { signaling, webrtc, settings, audioMixer: appAudioMixer } = TDG;
 
 const ICON_LOCK_CLOSED = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
 const ICON_LOCK_OPEN = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 014.7-1.2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
@@ -39,9 +39,8 @@ const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
 const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
 
 const railTelas = document.getElementById('railTelas');
-const railPessoas = document.getElementById('railPessoas');
-const railChat = document.getElementById('railChat');
 const openConfigBtn = document.getElementById('openConfigBtn');
+const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
 
 const roomCodeText = document.getElementById('roomCodeText');
 const copyCodeBtn = document.getElementById('copyCodeBtn');
@@ -59,7 +58,6 @@ const turnFields = document.getElementById('turnFields');
 const turnHostInput = document.getElementById('turnHostInput');
 const turnUserInput = document.getElementById('turnUserInput');
 const turnPassInput = document.getElementById('turnPassInput');
-const audioModeSeg = document.getElementById('audioModeSeg');
 const shareQualitySeg = document.getElementById('shareQualitySeg');
 const saveConfigBtn = document.getElementById('saveConfigBtn');
 const cancelConfigBtn = document.getElementById('cancelConfigBtn');
@@ -79,8 +77,14 @@ const mosaicView = document.getElementById('mosaicView');
 
 const sharingBanner = document.getElementById('sharingBanner');
 const sharingMeta = document.getElementById('sharingMeta');
+const audioMixerBtn = document.getElementById('audioMixerBtn');
 const switchScreenBtn = document.getElementById('switchScreenBtn');
 const stopShareBtn = document.getElementById('stopShareBtn');
+
+const audioMixerDialog = document.getElementById('audioMixerDialog');
+const audioMixerGrid = document.getElementById('audioMixerGrid');
+const audioMixerEmpty = document.getElementById('audioMixerEmpty');
+const closeAudioMixerBtn = document.getElementById('closeAudioMixerBtn');
 
 const peopleHeading = document.getElementById('peopleHeading');
 const peersEl = document.getElementById('peers');
@@ -91,6 +95,8 @@ const statSignal = document.getElementById('statSignal');
 
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
+
+const broadcastBanners = document.getElementById('broadcastBanners');
 
 // ---------- estado ----------
 
@@ -104,6 +110,9 @@ const reconnecting = new Map(); // broadcasterId -> attempt (number) | 'gave-up'
 const statsByPeer = new Map(); // peerId -> stats
 const includedWatch = new Set(); // broadcasterId que o usuário escolheu assistir
 const mutedTiles = new Set(); // broadcasterId com áudio desligado no mosaico
+const activeBanners = new Map(); // broadcasterId -> elemento do banner de "está transmitindo"
+const dismissedBroadcasts = new Set(); // broadcasterId dispensado enquanto essa transmissão durar
+let knownBroadcasting = new Set(); // broadcasterId que já estava transmitindo na última presence
 
 lobbyNameInput.value = signaling.myName();
 signalUrlLabel.textContent = settings.getSignalUrl();
@@ -265,6 +274,52 @@ switchScreenBtn.onclick = async () => {
   }
 };
 
+// ---------- áudio por app ----------
+
+function appInitial(name) {
+  return (name || '?').charAt(0).toUpperCase();
+}
+
+async function renderAudioMixerGrid() {
+  const sessions = await appAudioMixer.refreshSessions();
+  audioMixerGrid.innerHTML = '';
+  audioMixerEmpty.hidden = sessions.length > 0;
+
+  for (const s of sessions) {
+    const cell = document.createElement('button');
+    cell.className = 'audioMixerCell' + (appAudioMixer.isBlocked(s.pid) ? ' blocked' : '');
+    cell.title = s.name;
+
+    if (s.icon) {
+      const img = document.createElement('img');
+      img.src = s.icon;
+      cell.appendChild(img);
+    } else {
+      const fallback = document.createElement('span');
+      fallback.className = 'audioMixerCellFallback';
+      fallback.textContent = appInitial(s.name);
+      cell.appendChild(fallback);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = s.name;
+    cell.appendChild(label);
+
+    cell.onclick = () => {
+      appAudioMixer.toggleBlocked(s.pid);
+      cell.classList.toggle('blocked', appAudioMixer.isBlocked(s.pid));
+    };
+
+    audioMixerGrid.appendChild(cell);
+  }
+}
+
+audioMixerBtn.onclick = () => {
+  showDialog(audioMixerDialog);
+  renderAudioMixerGrid();
+};
+closeAudioMixerBtn.onclick = () => hideDialog(audioMixerDialog);
+
 webrtc.on('sharing-started', () => render());
 webrtc.on('sharing-stopped', () => render());
 webrtc.on('watcher-count', () => render());
@@ -277,7 +332,6 @@ webrtc.on('watch-track', ({ broadcasterId, stream }) => {
 });
 webrtc.on('watch-stopped', ({ broadcasterId }) => {
   remoteStreams.delete(broadcasterId);
-  tileEls.delete(broadcasterId);
   reconnecting.delete(broadcasterId);
   statsByPeer.delete(broadcasterId);
   mutedTiles.delete(broadcasterId);
@@ -312,7 +366,10 @@ function peerName(id) {
 
 function tileBasis(count) {
   if (count <= 1) return '78%';
-  return 'calc(50% - 6px)';
+  const columns = Math.ceil(Math.sqrt(count));
+  const gapPx = 12;
+  const compensate = (gapPx * (columns - 1)) / columns;
+  return `calc(${100 / columns}% - ${compensate}px)`;
 }
 
 function renderMosaic() {
@@ -380,8 +437,6 @@ function renderMosaic() {
     const s = statsByPeer.get(id);
     entry.badgeMeta.textContent = s ? statsMetaText(s) : '';
   }
-
-  mosaicView.hidden = activeIds.length === 0;
 }
 
 function statsMetaText(s) {
@@ -486,22 +541,23 @@ signaling.on('chat', renderChatMessage);
 
 // ---------- rail ----------
 
-function setActiveRail(btn) {
-  for (const b of [railTelas, railPessoas, railChat]) b.classList.remove('active');
-  btn.classList.add('active');
-}
 railTelas.onclick = () => {
   showConfig = false;
-  setActiveRail(railTelas);
+  railTelas.classList.add('active');
   render();
 };
-railPessoas.onclick = () => {
-  setActiveRail(railPessoas);
-  document.querySelector('.sidebarPeople').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-};
-railChat.onclick = () => {
-  setActiveRail(railChat);
-  document.querySelector('.sidebarChat').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+// ---------- sidebar recolhível ----------
+
+function applySidebarCollapsed(collapsed) {
+  roomScreen.classList.toggle('sidebar-collapsed', collapsed);
+  sidebarToggleBtn.title = collapsed ? 'Expandir painel' : 'Recolher painel';
+}
+applySidebarCollapsed(settings.getSidebarCollapsed());
+sidebarToggleBtn.onclick = () => {
+  const collapsed = !roomScreen.classList.contains('sidebar-collapsed');
+  applySidebarCollapsed(collapsed);
+  settings.setSidebarCollapsed(collapsed);
 };
 
 // ---------- configurações ----------
@@ -516,8 +572,6 @@ function openConfig() {
   turnUserInput.value = turn.user;
   turnPassInput.value = turn.pass;
   testSignalResult.textContent = '';
-  const audioMode = settings.getAudioMode();
-  for (const input of audioModeSeg.querySelectorAll('input')) input.checked = input.value === audioMode;
   const shareQuality = settings.getShareQuality();
   for (const input of shareQualitySeg.querySelectorAll('input')) input.checked = input.value === shareQuality;
   showConfig = true;
@@ -544,9 +598,6 @@ saveConfigBtn.onclick = () => {
     user: turnUserInput.value.trim(),
     pass: turnPassInput.value,
   });
-
-  const audioInput = audioModeSeg.querySelector('input:checked');
-  if (audioInput) settings.setAudioMode(audioInput.value);
 
   const qualityInput = shareQualitySeg.querySelector('input:checked');
   if (qualityInput) settings.setShareQuality(qualityInput.value);
@@ -624,8 +675,8 @@ function render() {
   }
 
   const showMosaic = !showConfig && !showError && tileCount > 0;
-  if (showMosaic) renderMosaic();
-  else mosaicView.hidden = true;
+  renderMosaic();
+  mosaicView.hidden = !showMosaic;
 
   streamsTag.textContent = tileCount === 0 ? 'nenhuma tela ativa' : tileCount === 1 ? '1 tela ativa' : `${tileCount} telas ativas`;
 
@@ -670,6 +721,18 @@ signaling.on('join-error', () => {
 signaling.on('room-list', ({ rooms }) => renderRoomList(rooms));
 
 signaling.on('presence', ({ clients }) => {
+  const nowBroadcasting = new Set(clients.filter((p) => p.broadcasting && p.id !== signaling.myId()).map((p) => p.id));
+  for (const id of nowBroadcasting) {
+    if (!knownBroadcasting.has(id)) showBroadcastBanner(id, clients);
+  }
+  for (const id of knownBroadcasting) {
+    if (!nowBroadcasting.has(id)) {
+      removeBroadcastBanner(id);
+      dismissedBroadcasts.delete(id);
+    }
+  }
+  knownBroadcasting = nowBroadcasting;
+
   peers = clients;
   refreshWatch();
   render();
@@ -685,8 +748,59 @@ function refreshWatch() {
 function toggleWatch(id) {
   if (includedWatch.has(id)) includedWatch.delete(id);
   else includedWatch.add(id);
+  removeBroadcastBanner(id);
   refreshWatch();
   render();
+}
+
+// ---------- banner de "está transmitindo" ----------
+
+function showBroadcastBanner(id, clientsList) {
+  if (includedWatch.has(id) || dismissedBroadcasts.has(id) || activeBanners.has(id)) return;
+  const p = clientsList.find((c) => c.id === id);
+  const name = p ? p.name : 'alguém';
+
+  const el = document.createElement('div');
+  el.className = 'broadcastBanner';
+
+  const avatar = document.createElement('span');
+  avatar.className = 'peerAvatar';
+  avatar.textContent = (name || '?').charAt(0).toUpperCase();
+
+  const text = document.createElement('span');
+  text.className = 'broadcastBannerText';
+  text.textContent = `${name} está transmitindo`;
+
+  const actions = document.createElement('div');
+  actions.className = 'broadcastBannerActions';
+
+  const eyeBtn = document.createElement('button');
+  eyeBtn.className = 'btn btn-secondary btn-icon';
+  eyeBtn.title = 'Assistir';
+  eyeBtn.innerHTML = ICON_EYE_CLOSED;
+  eyeBtn.onclick = () => toggleWatch(id);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn btn-secondary btn-icon';
+  closeBtn.title = 'Dispensar';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = () => {
+    dismissedBroadcasts.add(id);
+    removeBroadcastBanner(id);
+  };
+
+  actions.append(eyeBtn, closeBtn);
+  el.append(avatar, text, actions);
+  broadcastBanners.appendChild(el);
+  activeBanners.set(id, el);
+}
+
+function removeBroadcastBanner(id) {
+  const el = activeBanners.get(id);
+  if (el) {
+    el.remove();
+    activeBanners.delete(id);
+  }
 }
 
 signaling.on('signal', ({ from, data }) => {
