@@ -12,4 +12,5 @@ TDG.patchNotes = {
   '1.0.5': ['Correção no empacotamento do instalador (o app não abria mais depois de atualizar).'],
   '1.0.6': ['Agora mostra a versão instalada lá embaixo em Configurações.'],
   '1.0.7': ['Nova aba de tema em Configurações: troca a cor do app (fundo e botões) na hora.'],
+  '1.0.8': ['Botão "Verificar atualizações" em Configurações, pra checar na hora sem esperar.'],
 };

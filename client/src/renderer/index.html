@@ -193,7 +193,11 @@
             <button class="btn btn-secondary" id="cancelConfigBtn">Cancelar</button>
           </div>
 
-          <p class="text-muted" id="appVersionText" style="font-size:12px;margin-top:4px"></p>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+            <p class="text-muted" id="appVersionText" style="font-size:12px;margin:0"></p>
+            <button class="btn btn-ghost" id="checkUpdateBtn" style="font-size:12px">Verificar atualizações</button>
+          </div>
+          <p class="text-muted" id="checkUpdateResult" style="font-size:12px"></p>
         </div>
 
         <div id="emptyView" class="centeredView" hidden>

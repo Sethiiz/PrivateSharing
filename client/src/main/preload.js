@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('appUpdater', {
     return () => ipcRenderer.removeListener('update:downloaded', listener);
   },
   install: () => ipcRenderer.send('update:install'),
+  checkNow: () => ipcRenderer.invoke('update:check'),
 });
 
 contextBridge.exposeInMainWorld('appInfo', {

@@ -854,6 +854,16 @@ window.appUpdater.onDownloaded(() => {
   updateBtn.hidden = false;
 });
 
+const checkUpdateBtn = document.getElementById('checkUpdateBtn');
+const checkUpdateResult = document.getElementById('checkUpdateResult');
+checkUpdateBtn.onclick = async () => {
+  checkUpdateResult.textContent = 'Verificando…';
+  const result = await window.appUpdater.checkNow();
+  if (result.status === 'up-to-date') checkUpdateResult.textContent = 'Já está na versão mais recente.';
+  else if (result.status === 'available') checkUpdateResult.textContent = `Encontrou a versão ${result.version} — baixando em segundo plano.`;
+  else checkUpdateResult.textContent = `Erro ao verificar: ${result.message}`;
+};
+
 // ---------- novidades da versão ----------
 
 closePatchNotesBtn.onclick = () => hideDialog(patchNotesDialog);

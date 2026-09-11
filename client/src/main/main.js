@@ -172,6 +172,17 @@ autoUpdater.on('error', (err) => console.error('[autoUpdater]', err.message));
 
 ipcMain.on('update:install', () => autoUpdater.quitAndInstall());
 
+ipcMain.handle('update:check', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    const remoteVersion = result && result.updateInfo ? result.updateInfo.version : null;
+    if (remoteVersion && remoteVersion !== app.getVersion()) return { status: 'available', version: remoteVersion };
+    return { status: 'up-to-date' };
+  } catch (err) {
+    return { status: 'error', message: err.message };
+  }
+});
+
 ipcMain.handle('app:get-version', () => app.getVersion());
 
 app.whenReady().then(() => {
