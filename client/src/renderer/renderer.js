@@ -1,4 +1,6 @@
-const { signaling, webrtc, settings, audioMixer: appAudioMixer } = TDG;
+const { signaling, webrtc, settings, theme, audioMixer: appAudioMixer } = TDG;
+
+theme.apply(settings.getTheme());
 
 const ICON_LOCK_CLOSED = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
 const ICON_LOCK_OPEN = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 014.7-1.2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
@@ -60,6 +62,7 @@ const turnHostInput = document.getElementById('turnHostInput');
 const turnUserInput = document.getElementById('turnUserInput');
 const turnPassInput = document.getElementById('turnPassInput');
 const shareQualitySeg = document.getElementById('shareQualitySeg');
+const themeSwatches = document.getElementById('themeSwatches');
 const saveConfigBtn = document.getElementById('saveConfigBtn');
 const cancelConfigBtn = document.getElementById('cancelConfigBtn');
 
@@ -568,6 +571,28 @@ sidebarToggleBtn.onclick = () => {
 
 // ---------- configurações ----------
 
+for (const [id, preset] of Object.entries(theme.PRESETS)) {
+  const btn = document.createElement('button');
+  btn.className = 'themeSwatch';
+  btn.type = 'button';
+  btn.title = preset.label;
+  btn.style.background = preset.accent;
+  btn.onclick = () => {
+    theme.apply(id);
+    settings.setTheme(id);
+    highlightActiveTheme();
+  };
+  themeSwatches.appendChild(btn);
+}
+
+function highlightActiveTheme() {
+  const current = settings.getTheme();
+  const ids = Object.keys(theme.PRESETS);
+  themeSwatches.querySelectorAll('.themeSwatch').forEach((btn, i) => {
+    btn.classList.toggle('active', ids[i] === current);
+  });
+}
+
 function openConfig() {
   signalUrlInput.value = settings.getSignalUrl();
   const turn = settings.getTurn();
@@ -580,6 +605,7 @@ function openConfig() {
   testSignalResult.textContent = '';
   const shareQuality = settings.getShareQuality();
   for (const input of shareQualitySeg.querySelectorAll('input')) input.checked = input.value === shareQuality;
+  highlightActiveTheme();
   showConfig = true;
   render();
 }

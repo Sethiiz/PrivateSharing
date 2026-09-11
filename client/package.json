@@ -1,7 +1,7 @@
 {
   "name": "private-sharing",
   "productName": "Private Sharing",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "App de compartilhamento de tela por salas, só pra galera",
   "main": "src/main/main.js",
   "scripts": {
@@ -29,6 +29,7 @@
       "src/renderer/index.html",
       "src/renderer/picker.html",
       "src/renderer/settings.js",
+      "src/renderer/theme.js",
       "src/renderer/patchnotes.js",
       "src/renderer/signaling.js",
       "src/renderer/webrtc.js",

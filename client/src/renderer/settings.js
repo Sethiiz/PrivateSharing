@@ -34,5 +34,8 @@ TDG.settings = (() => {
 
     getSidebarCollapsed: () => get('sidebarCollapsed', 'false') === 'true',
     setSidebarCollapsed: (collapsed) => localStorage.setItem('sidebarCollapsed', String(!!collapsed)),
+
+    getTheme: () => get('theme', 'purple'),
+    setTheme: (themeId) => localStorage.setItem('theme', themeId),
   };
 })();
