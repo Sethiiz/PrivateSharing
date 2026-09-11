@@ -110,6 +110,21 @@ download) — nesse caso vale rodar `node node_modules/.pnpm/electron@<versão>/
 manualmente pra ver o erro real, ou setar `ELECTRON_MIRROR` pra um espelho
 acessível antes do `pnpm install`.
 
+### Se o app instalado der "Cannot find module 'fs-extra'" ao abrir
+
+O `pnpm` guarda pacotes em `node_modules/.pnpm` e liga tudo por symlink; o
+`electron-builder` às vezes não segue esses links pra empacotar dependências
+transitivas (como o `fs-extra`, que o `electron-updater` usa por baixo dos
+panos), e elas ficam de fora do `.exe` — o app abre e quebra na hora com
+`Cannot find module`. Existe um `client/.npmrc` com `node-linker=hoisted`
+pra evitar isso, mas nem sempre é respeitado sozinho; se acontecer, força a
+reinstalação assim antes de rodar `pnpm run dist`/`pnpm run publish`:
+```bash
+cd client
+rm -rf node_modules
+pnpm install --config.node-linker=hoisted
+```
+
 ## Limitações
 
 - **Mesh puro**: cada watcher abre uma conexão P2P direta com quem
