@@ -9,6 +9,8 @@ const server = http.createServer((req, res) => {
 });
 const wss = new WebSocket.Server({ server });
 
+const HEARTBEAT_INTERVAL_MS = 30000;
+
 // clientId -> { ws, name, roomId, broadcasting }
 const clients = new Map();
 // roomId -> { members: Set<clientId>, passwordHash: string|null }
@@ -111,6 +113,11 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ type: 'welcome', id }));
   broadcastRoomList();
 
+  ws.isAlive = true;
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
+
   ws.on('message', (raw) => {
     let msg;
     try {
@@ -122,6 +129,10 @@ wss.on('connection', (ws) => {
     if (!me) return;
 
     switch (msg.type) {
+      case 'ping':
+        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'pong' }));
+        break;
+
       case 'join-room':
         me.name = String(msg.name || me.name).slice(0, 40);
         joinRoom(id, msg.roomId, msg.password);
@@ -191,5 +202,18 @@ wss.on('connection', (ws) => {
     clients.delete(id);
   });
 });
+
+const heartbeat = setInterval(() => {
+  for (const ws of wss.clients) {
+    if (ws.isAlive === false) {
+      ws.terminate();
+      continue;
+    }
+    ws.isAlive = false;
+    ws.ping();
+  }
+}, HEARTBEAT_INTERVAL_MS);
+
+wss.on('close', () => clearInterval(heartbeat));
 
 server.listen(PORT, () => console.log(`Signaling server ouvindo na porta ${PORT}`));

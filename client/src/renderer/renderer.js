@@ -705,11 +705,19 @@ signaling.on('connecting', () => setSignalStatus('Conectando…', false));
 signaling.on('connected', () => setSignalStatus('Sinalização conectada', true));
 signaling.on('disconnected', () => setSignalStatus('Sinalização caiu — reconectando…', false));
 
+signaling.on('reconnected', () => {
+  webrtc.resyncConnections();
+  reconnecting.clear();
+  render();
+});
+
 signaling.on('joined', ({ roomId }) => {
   pendingJoin = null;
   hideDialog(createDialog);
   hideDialog(passwordDialog);
   showRoom(roomId);
+  // Reconectou compartilhando: o entry novo no servidor veio com broadcasting: false.
+  if (webrtc.isSharing()) signaling.send({ type: 'start-share' });
 });
 
 signaling.on('join-error', () => {

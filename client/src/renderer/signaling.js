@@ -5,7 +5,31 @@ TDG.signaling = (() => {
   let myId = null;
   let currentRoomId = null;
   let currentPassword = null;
+  let hasConnectedBefore = false;
+  let heartbeatTimer = null;
+  let pongTimer = null;
   const listeners = new Map();
+
+  const PING_INTERVAL_MS = 25000;
+  const PONG_TIMEOUT_MS = 10000;
+
+  function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatTimer = setInterval(() => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'ping' }));
+      pongTimer = setTimeout(() => {
+        if (ws) ws.close();
+      }, PONG_TIMEOUT_MS);
+    }, PING_INTERVAL_MS);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (pongTimer) clearTimeout(pongTimer);
+    heartbeatTimer = null;
+    pongTimer = null;
+  }
 
   function on(type, cb) {
     if (!listeners.has(type)) listeners.set(type, new Set());
@@ -29,12 +53,20 @@ TDG.signaling = (() => {
     emit('connecting');
 
     ws.onopen = () => {
+      startHeartbeat();
       emit('connected');
+      if (hasConnectedBefore) emit('reconnected');
+      hasConnectedBefore = true;
       if (currentRoomId) send({ type: 'join-room', roomId: currentRoomId, name: myName, password: currentPassword });
     };
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
+      if (msg.type === 'pong') {
+        if (pongTimer) clearTimeout(pongTimer);
+        pongTimer = null;
+        return;
+      }
       if (msg.type === 'welcome') {
         myId = msg.id;
         emit('welcome', msg);
@@ -55,6 +87,7 @@ TDG.signaling = (() => {
     };
 
     ws.onclose = () => {
+      stopHeartbeat();
       emit('disconnected');
       setTimeout(connect, 2000);
     };

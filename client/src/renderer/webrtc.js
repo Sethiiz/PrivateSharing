@@ -367,6 +367,23 @@ TDG.webrtc = (() => {
     stopAllWatching();
   }
 
+  // Reconectar na sinalização troca os ids de todo mundo no servidor, então
+  // as conexões P2P atuais precisam ser refeitas (a captura local continua).
+  function resyncConnections() {
+    for (const pc of broadcastConnections.values()) pc.close();
+    broadcastConnections.clear();
+    watcherCount = 0;
+    emit('watcher-count', { count: 0 });
+
+    for (const entry of watchConnections.values()) {
+      if (entry.retryTimer) clearTimeout(entry.retryTimer);
+      if (entry.pc) entry.pc.close();
+    }
+    watchConnections.clear();
+    prevBytes.clear();
+    stopStatsLoopIfIdle();
+  }
+
   return {
     on,
     startSharing,
@@ -377,6 +394,7 @@ TDG.webrtc = (() => {
     retryNow,
     handleSignal,
     reset,
+    resyncConnections,
     isSharing: () => sharing,
     getWatcherCount: () => watcherCount,
     getLocalStream: () => localStream,
