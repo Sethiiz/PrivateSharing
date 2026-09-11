@@ -2,6 +2,7 @@ const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('elect
 const path = require('path');
 const { execFile } = require('child_process');
 const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
 const audioMixer = require(path.join(__dirname, '..', '..', 'native', 'audio_mixer'));
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
@@ -162,13 +163,20 @@ ipcMain.on('audio-mixer:stop-all', () => {
 
 // ---------- atualização automática ----------
 
+log.transports.file.level = 'info';
+autoUpdater.logger = log;
+
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = false;
 
+autoUpdater.on('checking-for-update', () => log.info('[autoUpdater] checking-for-update'));
+autoUpdater.on('update-available', (info) => log.info('[autoUpdater] update-available', info.version));
+autoUpdater.on('update-not-available', (info) => log.info('[autoUpdater] update-not-available, current', app.getVersion(), 'latest', info.version));
 autoUpdater.on('update-downloaded', () => {
+  log.info('[autoUpdater] update-downloaded');
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update:downloaded');
 });
-autoUpdater.on('error', (err) => console.error('[autoUpdater]', err.message));
+autoUpdater.on('error', (err) => log.error('[autoUpdater]', err));
 
 ipcMain.on('update:install', () => autoUpdater.quitAndInstall());
 
@@ -204,9 +212,9 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 
-  autoUpdater.checkForUpdates().catch((err) => console.error('[autoUpdater]', err.message));
+  autoUpdater.checkForUpdates().catch((err) => log.error('[autoUpdater]', err));
   setInterval(() => {
-    autoUpdater.checkForUpdates().catch((err) => console.error('[autoUpdater]', err.message));
+    autoUpdater.checkForUpdates().catch((err) => log.error('[autoUpdater]', err));
   }, UPDATE_CHECK_INTERVAL_MS);
 });
 
