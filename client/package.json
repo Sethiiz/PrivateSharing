@@ -45,7 +45,8 @@
       {
         "provider": "github",
         "owner": "Sethiiz",
-        "repo": "PrivateSharing"
+        "repo": "PrivateSharing",
+        "releaseType": "release"
       }
     ],
     "win": {
