@@ -47,6 +47,7 @@ const copyCodeBtn = document.getElementById('copyCodeBtn');
 const streamsTag = document.getElementById('streamsTag');
 const shareBtn = document.getElementById('shareBtn');
 const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+const updateBtn = document.getElementById('updateBtn');
 
 const configView = document.getElementById('configView');
 const signalUrlInput = document.getElementById('signalUrlInput');
@@ -85,6 +86,11 @@ const audioMixerDialog = document.getElementById('audioMixerDialog');
 const audioMixerGrid = document.getElementById('audioMixerGrid');
 const audioMixerEmpty = document.getElementById('audioMixerEmpty');
 const closeAudioMixerBtn = document.getElementById('closeAudioMixerBtn');
+
+const patchNotesDialog = document.getElementById('patchNotesDialog');
+const patchNotesVersion = document.getElementById('patchNotesVersion');
+const patchNotesList = document.getElementById('patchNotesList');
+const closePatchNotesBtn = document.getElementById('closePatchNotesBtn');
 
 const peopleHeading = document.getElementById('peopleHeading');
 const peersEl = document.getElementById('peers');
@@ -814,5 +820,34 @@ function removeBroadcastBanner(id) {
 signaling.on('signal', ({ from, data }) => {
   webrtc.handleSignal(from, data);
 });
+
+// ---------- atualização automática ----------
+
+updateBtn.onclick = () => window.appUpdater.install();
+window.appUpdater.onDownloaded(() => {
+  updateBtn.hidden = false;
+});
+
+// ---------- novidades da versão ----------
+
+closePatchNotesBtn.onclick = () => hideDialog(patchNotesDialog);
+
+async function checkPatchNotes() {
+  const version = await window.appInfo.getVersion();
+  const lastSeen = localStorage.getItem('lastSeenVersion');
+  const notes = TDG.patchNotes[version];
+  if (lastSeen && lastSeen !== version && notes) {
+    patchNotesVersion.textContent = version;
+    patchNotesList.innerHTML = '';
+    for (const line of notes) {
+      const li = document.createElement('li');
+      li.textContent = line;
+      patchNotesList.appendChild(li);
+    }
+    showDialog(patchNotesDialog);
+  }
+  localStorage.setItem('lastSeenVersion', version);
+}
+checkPatchNotes();
 
 signaling.connect();

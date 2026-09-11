@@ -11,3 +11,16 @@ contextBridge.exposeInMainWorld('audioMixer', {
     return () => ipcRenderer.removeListener('audio-mixer:chunk', listener);
   },
 });
+
+contextBridge.exposeInMainWorld('appUpdater', {
+  onDownloaded: (cb) => {
+    const listener = () => cb();
+    ipcRenderer.on('update:downloaded', listener);
+    return () => ipcRenderer.removeListener('update:downloaded', listener);
+  },
+  install: () => ipcRenderer.send('update:install'),
+});
+
+contextBridge.exposeInMainWorld('appInfo', {
+  getVersion: () => ipcRenderer.invoke('app:get-version'),
+});

@@ -2,6 +2,31 @@
   display: none !important;
 }
 
+.patchNotesList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #05060a;
+  animation: updatePulse 2s ease-in-out infinite;
+}
+.btn-accent:hover {
+  background: var(--color-accent-300);
+  border-color: var(--color-accent-300);
+}
+@keyframes updatePulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 45%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent) 0%, transparent); }
+}
+
 html, body {
   height: 100%;
 }

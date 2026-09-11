@@ -1,12 +1,16 @@
 {
   "name": "private-sharing",
   "productName": "Private Sharing",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "App de compartilhamento de tela por salas, só pra galera",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win",
+    "publish": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.2.0",
@@ -25,6 +29,7 @@
       "src/renderer/index.html",
       "src/renderer/picker.html",
       "src/renderer/settings.js",
+      "src/renderer/patchnotes.js",
       "src/renderer/signaling.js",
       "src/renderer/webrtc.js",
       "src/renderer/renderer.js",
@@ -35,6 +40,13 @@
       "native/audio_mixer/index.js",
       "native/audio_mixer/package.json",
       "native/audio_mixer/build/Release/audio_mixer.node"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Sethiiz",
+        "repo": "PrivateSharing"
+      }
     ],
     "win": {
       "target": "nsis"

@@ -1,7 +1,10 @@
 const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron');
 const path = require('path');
 const { execFile } = require('child_process');
+const { autoUpdater } = require('electron-updater');
 const audioMixer = require(path.join(__dirname, '..', '..', 'native', 'audio_mixer'));
+
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 let mainWindow;
 
@@ -157,6 +160,20 @@ ipcMain.on('audio-mixer:stop-all', () => {
   audioMixer.stopAll();
 });
 
+// ---------- atualização automática ----------
+
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = false;
+
+autoUpdater.on('update-downloaded', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update:downloaded');
+});
+autoUpdater.on('error', (err) => console.error('[autoUpdater]', err.message));
+
+ipcMain.on('update:install', () => autoUpdater.quitAndInstall());
+
+ipcMain.handle('app:get-version', () => app.getVersion());
+
 app.whenReady().then(() => {
   // useSystemPicker usa o seletor nativo do Windows/macOS quando disponível
   // (estilo Discord/Teams); nas plataformas sem esse suporte, o handler
@@ -175,6 +192,11 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  autoUpdater.checkForUpdates().catch((err) => console.error('[autoUpdater]', err.message));
+  setInterval(() => {
+    autoUpdater.checkForUpdates().catch((err) => console.error('[autoUpdater]', err.message));
+  }, UPDATE_CHECK_INTERVAL_MS);
 });
 
 app.on('window-all-closed', () => {
