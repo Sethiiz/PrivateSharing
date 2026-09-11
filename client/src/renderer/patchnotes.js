@@ -9,4 +9,5 @@ TDG.patchNotes = {
     'Corrigido: a conexão de sinalização não cai mais durante um compartilhamento longo (o que fazia a tela travar/sumir pra quem estava assistindo).',
   ],
   '1.0.3': ['Ao atualizar, agora aparece essa telinha com as novidades da versão.'],
+  '1.0.5': ['Correção no empacotamento do instalador (o app não abria mais depois de atualizar).'],
 };
