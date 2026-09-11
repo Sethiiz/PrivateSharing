@@ -834,6 +834,7 @@ closePatchNotesBtn.onclick = () => hideDialog(patchNotesDialog);
 
 async function checkPatchNotes() {
   const version = await window.appInfo.getVersion();
+  document.getElementById('appVersionText').textContent = `Versão ${version}`;
   const lastSeen = localStorage.getItem('lastSeenVersion');
   const notes = TDG.patchNotes[version];
   if (lastSeen && lastSeen !== version && notes) {
