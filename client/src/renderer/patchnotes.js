@@ -20,4 +20,5 @@ TDG.patchNotes = {
   '1.0.13': ['O aviso de atualização agora é um banner no topo, em vez do botão perdido no cabeçalho da sala.'],
   '1.0.14': ['Teste do banner de atualização no topo.'],
   '1.0.15': ['Adicionada uma seção de tema para os daltônicos.'],
+  '1.0.16': ['Testando essa delicia de patchnote.']
 };
