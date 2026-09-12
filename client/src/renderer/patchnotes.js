@@ -15,4 +15,5 @@ TDG.patchNotes = {
   '1.0.8': ['Botão "Verificar atualizações" em Configurações, pra checar na hora sem esperar.'],
   '1.0.9': ['Log de atualização em arquivo, pra diagnosticar problemas de update mais fácil.'],
   '1.0.10': ['Teste do fluxo de atualização automática, ponta a ponta.'],
+  '1.0.11': ['Correção real do download de atualização (uma dependência interna do updater estava na versão errada e travava o download).'],
 };

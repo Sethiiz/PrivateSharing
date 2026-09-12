@@ -1,2 +1,4 @@
 allowBuilds:
   electron: true
+overrides:
+  builder-util-runtime: 9.7.0

@@ -4,10 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  builder-util-runtime: 9.7.0
+
 importers:
 
   .:
     dependencies:
+      electron-log:
+        specifier: ^5.4.4
+        version: 5.4.4
       electron-updater:
         specifier: ^6.3.9
         version: 6.8.9(supports-color@7.2.0)
@@ -261,10 +267,6 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  builder-util-runtime@9.2.4:
-    resolution: {integrity: sha512-upp+biKpN/XZMLim7aguUyW8s0FUpDvOtK6sbanMFDAMBzpHDqdhgVYm6zc9HJ6nWo7u2Lxk60i2M6Jd3aiNrA==}
-    engines: {node: '>=12.0.0'}
-
   builder-util-runtime@9.7.0:
     resolution: {integrity: sha512-g/kR520giAFYkSXTzcmF3kqQq7wi8F6N6SzeDgZrqTBN+VHdmgWOyTdD1yD7AATDId/yXLvuP34CxW46/BwCdw==}
     engines: {node: '>=12.0.0'}
@@ -435,6 +437,10 @@ packages:
     resolution: {integrity: sha512-yZSgVHft5dNVlo31qmJAe4BVKQfFdwpRw7sFp1iQglDRCDD6r22zfRJuZlhtB5gp9FHUxCMEoWGq10SkCnMAIg==}
     engines: {node: '>=14.0.0'}
     hasBin: true
+
+  electron-log@5.4.4:
+    resolution: {integrity: sha512-istWgaXjBfURBSS8LWVW9C3jsc6+ac+tY1lXrQEOTp0lVj+a4OlO1Tmqb36GgnEUDv92DGC9VI1HNXwJinWpgA==}
+    engines: {node: '>= 14'}
 
   electron-publish@24.13.1:
     resolution: {integrity: sha512-2ZgdEqJ8e9D17Hwp5LEq5mLQPjqU3lv/IALvgp+4W8VeNhryfGhYEQC/PgDPMrnWUp+l60Ou5SJLsu+k4mhQ8A==}
@@ -1425,7 +1431,7 @@ snapshots:
       async-exit-hook: 2.0.1
       bluebird-lst: 1.0.9
       builder-util: 24.13.1(supports-color@7.2.0)
-      builder-util-runtime: 9.2.4(supports-color@7.2.0)
+      builder-util-runtime: 9.7.0(supports-color@7.2.0)
       chromium-pickle-js: 0.2.0
       debug: 4.4.3(supports-color@7.2.0)
       dmg-builder: 24.13.3(electron-builder-squirrel-windows@24.13.3)(supports-color@7.2.0)
@@ -1539,13 +1545,6 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  builder-util-runtime@9.2.4(supports-color@7.2.0):
-    dependencies:
-      debug: 4.4.3(supports-color@7.2.0)
-      sax: 1.6.1
-    transitivePeerDependencies:
-      - supports-color
-
   builder-util-runtime@9.7.0(supports-color@7.2.0):
     dependencies:
       debug: 4.4.3(supports-color@7.2.0)
@@ -1559,7 +1558,7 @@ snapshots:
       '@types/debug': 4.1.13
       app-builder-bin: 4.0.0
       bluebird-lst: 1.0.9
-      builder-util-runtime: 9.2.4(supports-color@7.2.0)
+      builder-util-runtime: 9.7.0(supports-color@7.2.0)
       chalk: 4.1.2
       cross-spawn: 7.0.6
       debug: 4.4.3(supports-color@7.2.0)
@@ -1711,7 +1710,7 @@ snapshots:
     dependencies:
       app-builder-lib: 24.13.3(dmg-builder@24.13.3)(electron-builder-squirrel-windows@24.13.3)(supports-color@7.2.0)
       builder-util: 24.13.1(supports-color@7.2.0)
-      builder-util-runtime: 9.2.4(supports-color@7.2.0)
+      builder-util-runtime: 9.7.0(supports-color@7.2.0)
       fs-extra: 10.1.0
       iconv-lite: 0.6.3
       js-yaml: 4.3.1
@@ -1763,7 +1762,7 @@ snapshots:
     dependencies:
       app-builder-lib: 24.13.3(dmg-builder@24.13.3)(electron-builder-squirrel-windows@24.13.3)(supports-color@7.2.0)
       builder-util: 24.13.1(supports-color@7.2.0)
-      builder-util-runtime: 9.2.4(supports-color@7.2.0)
+      builder-util-runtime: 9.7.0(supports-color@7.2.0)
       chalk: 4.1.2
       dmg-builder: 24.13.3(electron-builder-squirrel-windows@24.13.3)(supports-color@7.2.0)
       fs-extra: 10.1.0
@@ -1776,11 +1775,13 @@ snapshots:
       - electron-builder-squirrel-windows
       - supports-color
 
+  electron-log@5.4.4: {}
+
   electron-publish@24.13.1(supports-color@7.2.0):
     dependencies:
       '@types/fs-extra': 9.0.13
       builder-util: 24.13.1(supports-color@7.2.0)
-      builder-util-runtime: 9.2.4(supports-color@7.2.0)
+      builder-util-runtime: 9.7.0(supports-color@7.2.0)
       chalk: 4.1.2
       fs-extra: 10.1.0
       lazy-val: 1.0.5
