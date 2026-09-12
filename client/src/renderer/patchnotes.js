@@ -16,4 +16,5 @@ TDG.patchNotes = {
   '1.0.9': ['Log de atualização em arquivo, pra diagnosticar problemas de update mais fácil.'],
   '1.0.10': ['Teste do fluxo de atualização automática, ponta a ponta.'],
   '1.0.11': ['Correção real do download de atualização (uma dependência interna do updater estava na versão errada e travava o download).'],
+  '1.0.12': ['Teste do ciclo completo de auto-atualização, dessa vez de ponta a ponta sem instalação manual.'],
 };
