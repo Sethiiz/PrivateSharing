@@ -64,6 +64,7 @@ const turnUserInput = document.getElementById('turnUserInput');
 const turnPassInput = document.getElementById('turnPassInput');
 const shareQualitySeg = document.getElementById('shareQualitySeg');
 const themeSwatches = document.getElementById('themeSwatches');
+const themeSwatchesColorblind = document.getElementById('themeSwatchesColorblind');
 const saveConfigBtn = document.getElementById('saveConfigBtn');
 const cancelConfigBtn = document.getElementById('cancelConfigBtn');
 
@@ -572,25 +573,28 @@ sidebarToggleBtn.onclick = () => {
 
 // ---------- configurações ----------
 
+const COLORBLIND_THEME_IDS = ['green', 'red'];
+
 for (const [id, preset] of Object.entries(theme.PRESETS)) {
+  const container = COLORBLIND_THEME_IDS.includes(id) ? themeSwatchesColorblind : themeSwatches;
   const btn = document.createElement('button');
   btn.className = 'themeSwatch';
   btn.type = 'button';
   btn.title = preset.label;
+  btn.dataset.themeId = id;
   btn.style.background = preset.accent;
   btn.onclick = () => {
     theme.apply(id);
     settings.setTheme(id);
     highlightActiveTheme();
   };
-  themeSwatches.appendChild(btn);
+  container.appendChild(btn);
 }
 
 function highlightActiveTheme() {
   const current = settings.getTheme();
-  const ids = Object.keys(theme.PRESETS);
-  themeSwatches.querySelectorAll('.themeSwatch').forEach((btn, i) => {
-    btn.classList.toggle('active', ids[i] === current);
+  document.querySelectorAll('.themeSwatch').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.themeId === current);
   });
 }
 
