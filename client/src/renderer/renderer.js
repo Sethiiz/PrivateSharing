@@ -49,7 +49,8 @@ const copyCodeBtn = document.getElementById('copyCodeBtn');
 const streamsTag = document.getElementById('streamsTag');
 const shareBtn = document.getElementById('shareBtn');
 const leaveRoomBtn = document.getElementById('leaveRoomBtn');
-const updateBtn = document.getElementById('updateBtn');
+const updateBanner = document.getElementById('updateBanner');
+const updateBannerBtn = document.getElementById('updateBannerBtn');
 
 const configView = document.getElementById('configView');
 const signalUrlInput = document.getElementById('signalUrlInput');
@@ -849,9 +850,9 @@ signaling.on('signal', ({ from, data }) => {
 
 // ---------- atualização automática ----------
 
-updateBtn.onclick = () => window.appUpdater.install();
+updateBannerBtn.onclick = () => window.appUpdater.install();
 window.appUpdater.onDownloaded(() => {
-  updateBtn.hidden = false;
+  updateBanner.classList.add('show');
 });
 
 const checkUpdateBtn = document.getElementById('checkUpdateBtn');

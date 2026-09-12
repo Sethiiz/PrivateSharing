@@ -33,19 +33,38 @@
   border-color: var(--color-text);
 }
 
-.btn-accent {
+.updateBanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 16px;
   background: var(--color-accent);
-  border-color: var(--color-accent);
   color: #05060a;
-  animation: updatePulse 2s ease-in-out infinite;
+  font-size: 13px;
+  font-weight: 500;
+  transform: translateY(-100%);
+  transition: transform 0.25s ease;
+  pointer-events: none;
 }
-.btn-accent:hover {
-  background: var(--color-accent-300);
-  border-color: var(--color-accent-300);
+.updateBanner.show {
+  transform: translateY(0);
+  pointer-events: auto;
 }
-@keyframes updatePulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 45%, transparent); }
-  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent) 0%, transparent); }
+.updateBanner .btn {
+  background: #05060a;
+  color: var(--color-accent);
+  border-color: transparent;
+  padding: 4px 14px;
+  font-size: 12px;
+}
+.updateBanner .btn:hover {
+  background: color-mix(in srgb, #05060a 85%, transparent);
 }
 
 html, body {
