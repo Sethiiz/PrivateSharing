@@ -118,46 +118,77 @@ function resolveProcessInfo(pids) {
   });
 }
 
+// pid -> { name, icon, exclude } — evita reabrir o PowerShell a cada poll de 2s.
+const processInfoCache = new Map();
+
 async function listAudioSessions() {
   const pids = audioMixer.listSessions();
-  const infos = await resolveProcessInfo(pids);
-  const results = [];
-  for (const info of infos) {
-    if (!info || !info.Id) continue;
-    // Nunca inclui o próprio app (main, renderer, GPU, utility rodam do mesmo
-    // executável) — evita microfonia e não dá nem a opção de desmutar.
-    if (info.Path && path.normalize(info.Path).toLowerCase() === path.normalize(process.execPath).toLowerCase()) {
-      continue;
-    }
-    let icon = null;
-    if (info.Path) {
-      try {
-        const img = await app.getFileIcon(info.Path, { size: 'normal' });
-        icon = img.toDataURL();
-      } catch {
-        icon = null;
-      }
-    }
-    results.push({ pid: info.Id, name: info.ProcessName || `pid ${info.Id}`, icon });
+  const live = new Set(pids);
+  for (const pid of [...processInfoCache.keys()]) {
+    if (!live.has(pid)) processInfoCache.delete(pid);
   }
-  return results;
+
+  const unknown = pids.filter((pid) => !processInfoCache.has(pid));
+  if (unknown.length > 0) {
+    const infos = await resolveProcessInfo(unknown);
+    for (const info of infos) {
+      if (!info || !info.Id) continue;
+      // Nunca inclui o próprio app (main, renderer, GPU, utility rodam do mesmo
+      // executável) — evita microfonia e não dá nem a opção de desmutar.
+      const isSelf =
+        !!info.Path && path.normalize(info.Path).toLowerCase() === path.normalize(process.execPath).toLowerCase();
+      let icon = null;
+      if (info.Path && !isSelf) {
+        try {
+          const img = await app.getFileIcon(info.Path, { size: 'normal' });
+          icon = img.toDataURL();
+        } catch {
+          icon = null;
+        }
+      }
+      processInfoCache.set(info.Id, { name: info.ProcessName || `pid ${info.Id}`, icon, exclude: isSelf });
+    }
+    // pid que o PowerShell não achou = processo já encerrado; guarda como excluído
+    // pra não tentar de novo até a sessão sumir da enumeração.
+    for (const pid of unknown) {
+      if (!processInfoCache.has(pid)) processInfoCache.set(pid, { name: `pid ${pid}`, icon: null, exclude: true });
+    }
+    log.info('[audioMixer] sessões novas', unknown.map((pid) => `${pid}:${processInfoCache.get(pid).name}${processInfoCache.get(pid).exclude ? '(excluído)' : ''}`).join(', '));
+  }
+
+  return pids
+    .filter((pid) => !processInfoCache.get(pid).exclude)
+    .map((pid) => ({ pid, name: processInfoCache.get(pid).name, icon: processInfoCache.get(pid).icon }));
 }
 
 ipcMain.handle('audio-mixer:list-sessions', () => listAudioSessions());
 
+const loggedFirstChunk = new Set();
+
 ipcMain.on('audio-mixer:start', (event, pid) => {
-  audioMixer.startCapture(pid, (samples) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio-mixer:chunk', { pid, samples });
-    }
-  });
+  log.info('[audioMixer] startCapture', pid);
+  try {
+    audioMixer.startCapture(pid, (samples) => {
+      if (!loggedFirstChunk.has(pid)) {
+        loggedFirstChunk.add(pid);
+        log.info('[audioMixer] primeiro áudio recebido do pid', pid);
+      }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio-mixer:chunk', { pid, samples });
+      }
+    });
+  } catch (err) {
+    log.error('[audioMixer] startCapture falhou', pid, err);
+  }
 });
 
 ipcMain.on('audio-mixer:stop', (event, pid) => {
+  loggedFirstChunk.delete(pid);
   audioMixer.stopCapture(pid);
 });
 
 ipcMain.on('audio-mixer:stop-all', () => {
+  loggedFirstChunk.clear();
   audioMixer.stopAll();
 });
 

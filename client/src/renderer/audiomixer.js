@@ -4,10 +4,14 @@ TDG.audioMixer = (() => {
   const SAMPLE_RATE = 48000;
   const CHANNELS = 2;
 
+  const REFRESH_INTERVAL_MS = 2000;
+
   let ctx = null;
   let destination = null;
   let started = false;
   let unsubscribeChunk = null;
+  let refreshTimer = null;
+  let refreshing = false;
   const nodes = new Map(); // pid -> { gainNode, nextStart }
   const blocked = new Set(); // pid bloqueado pelo usuário
 
@@ -16,6 +20,7 @@ TDG.audioMixer = (() => {
       ctx = new AudioContext({ sampleRate: SAMPLE_RATE });
       destination = ctx.createMediaStreamDestination();
     }
+    if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
 
@@ -92,18 +97,40 @@ TDG.audioMixer = (() => {
     const sessions = await window.audioMixer.listSessions();
     for (const s of sessions) startSession(s.pid);
 
+    refreshTimer = setInterval(() => {
+      if (refreshing) return;
+      refreshing = true;
+      refreshSessions()
+        .catch(() => {})
+        .finally(() => {
+          refreshing = false;
+        });
+    }, REFRESH_INTERVAL_MS);
+
     return destination.stream.getAudioTracks()[0];
   }
 
   function stop() {
     if (!started) return;
     started = false;
+    if (refreshTimer) {
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
     for (const pid of [...nodes.keys()]) stopSession(pid);
     if (unsubscribeChunk) {
       unsubscribeChunk();
       unsubscribeChunk = null;
     }
     window.audioMixer.stopAll();
+
+    // stopSharing() dá .stop() na faixa do destination, e uma faixa parada
+    // não volta — então o próximo compartilhamento precisa de um contexto novo.
+    if (ctx) {
+      ctx.close().catch(() => {});
+      ctx = null;
+      destination = null;
+    }
   }
 
   function toggleBlocked(pid) {

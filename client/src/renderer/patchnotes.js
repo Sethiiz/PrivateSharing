@@ -20,5 +20,9 @@ TDG.patchNotes = {
   '1.0.13': ['O aviso de atualização agora é um banner no topo, em vez do botão perdido no cabeçalho da sala.'],
   '1.0.14': ['Teste do banner de atualização no topo.'],
   '1.0.15': ['Adicionada uma seção de tema para os daltônicos.'],
-  '1.0.16': ['Testando essa delicia de patchnote.']
+  '1.0.16': ['Testando essa delicia de patchnote.'],
+  '1.0.17': [
+    'Corrigido: o som da tela não chegava pra quem assistia a partir do segundo compartilhamento na mesma sessão do app.',
+    'Corrigido: apps que abriam áudio depois de você começar a transmitir (jogo, aba, música) não eram capturados. Agora entram sozinhos.',
+  ],
 };
