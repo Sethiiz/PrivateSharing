@@ -22,15 +22,16 @@ Napi::Value ListSessions(const Napi::CallbackInfo& info) {
 
 Napi::Value StartCapture(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsFunction()) {
-    Napi::TypeError::New(env, "startCapture(pid, callback) esperado").ThrowAsJavaScriptException();
+  if (info.Length() < 3 || !info[0].IsNumber() || !info[1].IsFunction() || !info[2].IsFunction()) {
+    Napi::TypeError::New(env, "startCapture(pid, onData, onEnded) esperado").ThrowAsJavaScriptException();
     return env.Undefined();
   }
   uint32_t pid = info[0].As<Napi::Number>().Uint32Value();
-  Napi::Function callback = info[1].As<Napi::Function>();
+  Napi::Function onData = info[1].As<Napi::Function>();
+  Napi::Function onEnded = info[2].As<Napi::Function>();
 
   g_captures.erase(pid);
-  g_captures[pid] = std::make_unique<ProcessCapture>(pid, callback);
+  g_captures[pid] = std::make_unique<ProcessCapture>(pid, onData, onEnded);
   return env.Undefined();
 }
 

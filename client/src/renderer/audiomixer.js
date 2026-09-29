@@ -10,6 +10,7 @@ TDG.audioMixer = (() => {
   let destination = null;
   let started = false;
   let unsubscribeChunk = null;
+  let unsubscribeEnded = null;
   let refreshTimer = null;
   let refreshing = false;
   const nodes = new Map(); // pid -> { gainNode, nextStart }
@@ -74,13 +75,14 @@ TDG.audioMixer = (() => {
     }
   }
 
+  // A sessão de áudio do Windows aparece/some da enumeração o tempo todo (ex:
+  // um instante de silêncio já tira o app da lista) sem que a captura em si
+  // precise parar — quem avisa que precisa mesmo parar é o próprio módulo
+  // nativo, via onEnded, quando o processo-alvo encerra de verdade. Por isso
+  // esse refresh só ENTRA sessão nova; nunca derruba com base na ausência.
   async function refreshSessions() {
     const sessions = await window.audioMixer.listSessions();
     if (started) {
-      const currentPids = new Set(sessions.map((s) => s.pid));
-      for (const pid of [...nodes.keys()]) {
-        if (!currentPids.has(pid)) stopSession(pid);
-      }
       for (const s of sessions) {
         if (!nodes.has(s.pid)) startSession(s.pid);
       }
@@ -93,6 +95,7 @@ TDG.audioMixer = (() => {
     ensureContext();
     started = true;
     unsubscribeChunk = window.audioMixer.onChunk(handleChunk);
+    unsubscribeEnded = window.audioMixer.onEnded(({ pid }) => stopSession(pid));
 
     const sessions = await window.audioMixer.listSessions();
     for (const s of sessions) startSession(s.pid);
@@ -121,6 +124,10 @@ TDG.audioMixer = (() => {
     if (unsubscribeChunk) {
       unsubscribeChunk();
       unsubscribeChunk = null;
+    }
+    if (unsubscribeEnded) {
+      unsubscribeEnded();
+      unsubscribeEnded = null;
     }
     window.audioMixer.stopAll();
 

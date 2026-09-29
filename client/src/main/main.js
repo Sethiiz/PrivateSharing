@@ -168,15 +168,27 @@ const loggedFirstChunk = new Set();
 ipcMain.on('audio-mixer:start', (event, pid) => {
   log.info('[audioMixer] startCapture', pid);
   try {
-    audioMixer.startCapture(pid, (samples) => {
-      if (!loggedFirstChunk.has(pid)) {
-        loggedFirstChunk.add(pid);
-        log.info('[audioMixer] primeiro áudio recebido do pid', pid);
+    audioMixer.startCapture(
+      pid,
+      (samples) => {
+        if (!loggedFirstChunk.has(pid)) {
+          loggedFirstChunk.add(pid);
+          log.info('[audioMixer] primeiro áudio recebido do pid', pid);
+        }
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio-mixer:chunk', { pid, samples });
+        }
+      },
+      (reason) => {
+        // A própria captura nativa parou (processo encerrou ou o WASAPI
+        // falhou) — nunca disparado quando é o JS quem pede pra parar.
+        loggedFirstChunk.delete(pid);
+        log.info('[audioMixer] captura do pid', pid, 'encerrou sozinha:', reason);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio-mixer:ended', { pid, reason });
+        }
       }
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio-mixer:chunk', { pid, samples });
-      }
-    });
+    );
   } catch (err) {
     log.error('[audioMixer] startCapture falhou', pid, err);
   }

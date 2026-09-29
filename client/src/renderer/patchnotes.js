@@ -25,4 +25,7 @@ TDG.patchNotes = {
     'Corrigido: o som da tela não chegava pra quem assistia a partir do segundo compartilhamento na mesma sessão do app.',
     'Corrigido: apps que abriam áudio depois de você começar a transmitir (jogo, aba, música) não eram capturados. Agora entram sozinhos.',
   ],
+  '1.0.18': [
+    'Corrigido: o app ia ficando mais pesado/travado durante compartilhamentos longos — o "Áudio por app" reiniciava a captura de apps toda hora sem necessidade. Agora só reinicia quando o app realmente fecha.',
+  ],
 };

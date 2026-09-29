@@ -10,6 +10,11 @@ contextBridge.exposeInMainWorld('audioMixer', {
     ipcRenderer.on('audio-mixer:chunk', listener);
     return () => ipcRenderer.removeListener('audio-mixer:chunk', listener);
   },
+  onEnded: (cb) => {
+    const listener = (event, data) => cb(data);
+    ipcRenderer.on('audio-mixer:ended', listener);
+    return () => ipcRenderer.removeListener('audio-mixer:ended', listener);
+  },
 });
 
 contextBridge.exposeInMainWorld('appUpdater', {

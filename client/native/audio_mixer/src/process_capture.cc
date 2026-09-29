@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <vector>
 
 namespace {
@@ -64,10 +65,37 @@ class CompletionHandler : public IActivateAudioInterfaceCompletionHandler, publi
   HANDLE event_;
 };
 
+// true assim que o Windows confirma que o processo terminou (ou o handle nem
+// pôde ser aberto). Não tem relação com a sessão sumir/voltar do mixer —
+// aquilo é só cosmético e não deveria derrubar a captura.
+bool ProcessHasExited(HANDLE processHandle, std::string* debugReason) {
+  if (!processHandle) return false;
+  DWORD exitCode = STILL_ACTIVE;
+  if (!GetExitCodeProcess(processHandle, &exitCode)) {
+    *debugReason = "process-exited getexitcode-failed lastError=" + std::to_string(GetLastError());
+    return true;
+  }
+  if (exitCode != STILL_ACTIVE) {
+    *debugReason = "process-exited exitCode=" + std::to_string(exitCode);
+    return true;
+  }
+  return false;
+}
+
 }  // namespace
 
-ProcessCapture::ProcessCapture(uint32_t pid, Napi::Function callback) : pid_(pid) {
-  tsfn_ = Napi::ThreadSafeFunction::New(callback.Env(), callback, "ProcessCapture", 0, 1);
+namespace {
+void CallEnded(Napi::ThreadSafeFunction& tsfn, const std::string& reason) {
+  tsfn.BlockingCall(new std::string(reason), [](Napi::Env env, Napi::Function jsCallback, std::string* reason) {
+    jsCallback.Call({Napi::String::New(env, *reason)});
+    delete reason;
+  });
+}
+}  // namespace
+
+ProcessCapture::ProcessCapture(uint32_t pid, Napi::Function onData, Napi::Function onEnded) : pid_(pid) {
+  dataTsfn_ = Napi::ThreadSafeFunction::New(onData.Env(), onData, "ProcessCaptureData", 0, 1);
+  endedTsfn_ = Napi::ThreadSafeFunction::New(onEnded.Env(), onEnded, "ProcessCaptureEnded", 0, 1);
   thread_ = std::thread(&ProcessCapture::Run, this);
 }
 
@@ -76,12 +104,18 @@ ProcessCapture::~ProcessCapture() { Stop(); }
 void ProcessCapture::Stop() {
   if (stop_.exchange(true)) return;
   if (thread_.joinable()) thread_.join();
-  tsfn_.Release();
+  dataTsfn_.Release();
+  endedTsfn_.Release();
 }
 
 void ProcessCapture::Run() {
   HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
   bool needUninit = SUCCEEDED(hr);
+
+  // Só serve pra notar quando o processo-alvo morre de verdade; se não
+  // conseguirmos abrir o handle (processo protegido, corrida na saída etc.),
+  // seguimos sem essa checagem — os erros do WASAPI abaixo cobrem o resto.
+  HANDLE processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, pid_);
 
   AUDIOCLIENT_ACTIVATION_PARAMS params;
   ZeroMemory(&params, sizeof(params));
@@ -103,7 +137,9 @@ void ProcessCapture::Run() {
   if (FAILED(hr)) {
     handler->Release();
     if (asyncOp) asyncOp->Release();
+    if (processHandle) CloseHandle(processHandle);
     if (needUninit) CoUninitialize();
+    if (!stop_.load()) CallEnded(endedTsfn_, "activate-call-failed");
     return;
   }
 
@@ -115,7 +151,9 @@ void ProcessCapture::Run() {
   handler->Release();
 
   if (FAILED(activateResult) || !audioClient) {
+    if (processHandle) CloseHandle(processHandle);
     if (needUninit) CoUninitialize();
+    if (!stop_.load()) CallEnded(endedTsfn_, "activation-failed");
     return;
   }
 
@@ -136,7 +174,9 @@ void ProcessCapture::Run() {
   if (FAILED(hr)) {
     CloseHandle(hEvent);
     audioClient->Release();
+    if (processHandle) CloseHandle(processHandle);
     if (needUninit) CoUninitialize();
+    if (!stop_.load()) CallEnded(endedTsfn_, "client-init-failed");
     return;
   }
 
@@ -147,26 +187,43 @@ void ProcessCapture::Run() {
   if (FAILED(hr) || !captureClient) {
     CloseHandle(hEvent);
     audioClient->Release();
+    if (processHandle) CloseHandle(processHandle);
     if (needUninit) CoUninitialize();
+    if (!stop_.load()) CallEnded(endedTsfn_, "capture-service-failed");
     return;
   }
 
   audioClient->Start();
 
+  std::string endReason = "stopped-by-js";
   while (!stop_.load()) {
-    DWORD waitResult = WaitForSingleObject(hEvent, 500);
+    std::string exitDebug;
+    if (ProcessHasExited(processHandle, &exitDebug)) {
+      endReason = exitDebug;
+      break;
+    }
+
+    // 100ms (não 500) porque isso também limita quanto tempo Stop() trava o
+    // processo principal do Electron esperando essa thread perceber o pedido.
+    DWORD waitResult = WaitForSingleObject(hEvent, 100);
     if (stop_.load()) break;
     if (waitResult != WAIT_OBJECT_0) continue;
 
     UINT32 packetLength = 0;
-    if (FAILED(captureClient->GetNextPacketSize(&packetLength))) break;
+    if (FAILED(captureClient->GetNextPacketSize(&packetLength))) {
+      endReason = "get-next-packet-size-failed";
+      break;
+    }
 
+    bool clientFailed = false;
     while (packetLength != 0) {
       BYTE* data = nullptr;
       UINT32 numFrames = 0;
       DWORD flags = 0;
       if (FAILED(captureClient->GetBuffer(&data, &numFrames, &flags, nullptr, nullptr))) {
         packetLength = 0;
+        clientFailed = true;
+        endReason = "get-buffer-failed";
         break;
       }
 
@@ -178,7 +235,7 @@ void ProcessCapture::Run() {
           memcpy(samples->data(), data, samples->size() * sizeof(float));
         }
 
-        tsfn_.BlockingCall(samples, [](Napi::Env env, Napi::Function jsCallback, std::vector<float>* chunk) {
+        dataTsfn_.BlockingCall(samples, [](Napi::Env env, Napi::Function jsCallback, std::vector<float>* chunk) {
           Napi::Float32Array arr = Napi::Float32Array::New(env, chunk->size());
           memcpy(arr.Data(), chunk->data(), chunk->size() * sizeof(float));
           jsCallback.Call({arr});
@@ -189,14 +246,23 @@ void ProcessCapture::Run() {
       captureClient->ReleaseBuffer(numFrames);
       if (FAILED(captureClient->GetNextPacketSize(&packetLength))) {
         packetLength = 0;
+        clientFailed = true;
+        endReason = "get-next-packet-size-failed";
         break;
       }
     }
+    if (clientFailed) break;
   }
 
   audioClient->Stop();
   captureClient->Release();
   CloseHandle(hEvent);
   audioClient->Release();
+  if (processHandle) CloseHandle(processHandle);
   if (needUninit) CoUninitialize();
+
+  // Se saímos por conta própria (processo morreu ou o cliente WASAPI falhou),
+  // avisa o JS pra ele limpar a UI/nó de áudio sem precisar continuar
+  // reconsultando a lista de sessões.
+  if (!stop_.load()) CallEnded(endedTsfn_, endReason);
 }

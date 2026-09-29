@@ -526,6 +526,8 @@ function renderPeers() {
 
 // ---------- chat ----------
 
+const CHAT_HISTORY_LIMIT = 300; // evita o DOM crescer sem fim numa sala aberta por muito tempo
+
 function renderChatMessage(msg) {
   const wrap = document.createElement('div');
   const meta = document.createElement('div');
@@ -537,6 +539,7 @@ function renderChatMessage(msg) {
   bubble.textContent = msg.text;
   wrap.append(meta, bubble);
   chatMessages.appendChild(wrap);
+  while (chatMessages.childElementCount > CHAT_HISTORY_LIMIT) chatMessages.firstElementChild.remove();
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
