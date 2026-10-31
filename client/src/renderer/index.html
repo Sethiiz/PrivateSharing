@@ -197,6 +197,11 @@
             <div class="themeSwatches" id="themeSwatchesColorblind"></div>
           </div>
 
+          <div id="halloweenThemeSection" hidden>
+            <h6>🎃 Tema Secreto</h6>
+            <div class="themeSwatches" id="themeSwatchesHalloween"></div>
+          </div>
+
           <div class="configActions">
             <button class="btn btn-primary" id="saveConfigBtn">Salvar</button>
             <button class="btn btn-secondary" id="cancelConfigBtn">Cancelar</button>
@@ -275,7 +280,7 @@
       </div>
 
       <div class="card elev-sm sidebarStats">
-        <h6>Conexão</h6>
+        <h6>Conexã<span class="spookyO"><span class="spookyOLetter">o</span><img class="spookyOIcon" src="../static/svg/jack-o-lantern-svgrepo-com.svg" alt="" /></span></h6>
         <div class="statRow"><span>Rota</span><span id="statRoute">—</span></div>
         <div class="statRow"><span>Latência</span><span id="statPing">—</span></div>
         <div class="statRow"><span>Perda</span><span id="statLoss">—</span></div>
@@ -298,6 +303,8 @@
   <script src="signaling.js"></script>
   <script src="audiomixer.js"></script>
   <script src="webrtc.js"></script>
+  <div id="toast" class="toast"></div>
+
   <script src="renderer.js"></script>
 </body>
 </html>

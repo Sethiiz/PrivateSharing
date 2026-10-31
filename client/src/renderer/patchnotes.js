@@ -28,4 +28,5 @@ TDG.patchNotes = {
   '1.0.18': [
     'Corrigido: o app ia ficando mais pesado/travado durante compartilhamentos longos — o "Áudio por app" reiniciava a captura de apps toda hora sem necessidade. Agora só reinicia quando o app realmente fecha.',
   ],
+  '1.0.19': ['Update de Halloween??'],
 };

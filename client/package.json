@@ -1,7 +1,7 @@
 {
   "name": "private-sharing",
   "productName": "Private Sharing",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "App de compartilhamento de tela por salas, só pra galera",
   "main": "src/main/main.js",
   "scripts": {
@@ -39,6 +39,10 @@
       "src/renderer/picker.js",
       "src/renderer/app.css",
       "src/renderer/ds/styles.css",
+      "src/static/svg/jack-o-lantern-svgrepo-com.svg",
+      "src/static/svg/jack-o-lantern-svgrepo-com-halloween-theme.svg",
+      "src/static/icons/default-app-icon.png",
+      "src/static/icons/halloween-icon.png",
       "native/audio_mixer/index.js",
       "native/audio_mixer/package.json",
       "native/audio_mixer/build/Release/audio_mixer.node"

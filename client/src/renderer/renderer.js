@@ -1,6 +1,11 @@
 const { signaling, webrtc, settings, theme, audioMixer: appAudioMixer } = TDG;
 
+function syncAppIcon(themeId) {
+  if (window.appIcon) window.appIcon.set(themeId === 'halloween' ? 'halloween' : 'default');
+}
+
 theme.apply(settings.getTheme());
+syncAppIcon(settings.getTheme());
 
 const ICON_LOCK_CLOSED = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
 const ICON_LOCK_OPEN = '<svg width="13" height="13" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M5.5 7V5a2.5 2.5 0 014.7-1.2" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>';
@@ -65,6 +70,9 @@ const turnPassInput = document.getElementById('turnPassInput');
 const shareQualitySeg = document.getElementById('shareQualitySeg');
 const themeSwatches = document.getElementById('themeSwatches');
 const themeSwatchesColorblind = document.getElementById('themeSwatchesColorblind');
+const themeSwatchesHalloween = document.getElementById('themeSwatchesHalloween');
+const halloweenThemeSection = document.getElementById('halloweenThemeSection');
+const toastEl = document.getElementById('toast');
 const saveConfigBtn = document.getElementById('saveConfigBtn');
 const cancelConfigBtn = document.getElementById('cancelConfigBtn');
 
@@ -577,9 +585,13 @@ sidebarToggleBtn.onclick = () => {
 // ---------- configurações ----------
 
 const COLORBLIND_THEME_IDS = ['green', 'red'];
+const HALLOWEEN_THEME_ID = 'halloween';
 
 for (const [id, preset] of Object.entries(theme.PRESETS)) {
-  const container = COLORBLIND_THEME_IDS.includes(id) ? themeSwatchesColorblind : themeSwatches;
+  let container = themeSwatches;
+  if (id === HALLOWEEN_THEME_ID) container = themeSwatchesHalloween;
+  else if (COLORBLIND_THEME_IDS.includes(id)) container = themeSwatchesColorblind;
+
   const btn = document.createElement('button');
   btn.className = 'themeSwatch';
   btn.type = 'button';
@@ -589,6 +601,7 @@ for (const [id, preset] of Object.entries(theme.PRESETS)) {
   btn.onclick = () => {
     theme.apply(id);
     settings.setTheme(id);
+    syncAppIcon(id);
     highlightActiveTheme();
   };
   container.appendChild(btn);
@@ -600,6 +613,25 @@ function highlightActiveTheme() {
     btn.classList.toggle('active', btn.dataset.themeId === current);
   });
 }
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toastEl.classList.remove('show'), 4000);
+}
+
+function refreshHalloweenSectionVisibility() {
+  halloweenThemeSection.hidden = !settings.getHalloweenUnlocked();
+}
+refreshHalloweenSectionVisibility();
+
+document.querySelector('.spookyO').onclick = () => {
+  if (settings.getHalloweenUnlocked()) return;
+  settings.setHalloweenUnlocked(true);
+  refreshHalloweenSectionVisibility();
+  showToast('Você desbloqueou o tema de Halloween! 🎃');
+};
 
 function openConfig() {
   signalUrlInput.value = settings.getSignalUrl();

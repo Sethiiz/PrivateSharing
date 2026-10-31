@@ -37,5 +37,8 @@ TDG.settings = (() => {
 
     getTheme: () => get('theme', 'purple'),
     setTheme: (themeId) => localStorage.setItem('theme', themeId),
+
+    getHalloweenUnlocked: () => get('halloweenUnlocked', 'false') === 'true',
+    setHalloweenUnlocked: (unlocked) => localStorage.setItem('halloweenUnlocked', String(!!unlocked)),
   };
 })();

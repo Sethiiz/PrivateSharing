@@ -8,6 +8,7 @@ TDG.theme = (() => {
     red: { label: 'Vermelho', accent: '#e2666b', bg: '#211416' },
     orange: { label: 'Laranja', accent: '#f2a65a', bg: '#231a10' },
     pink: { label: 'Rosa', accent: '#e480c0', bg: '#201323' },
+    halloween: { label: 'Halloween', accent: '#f58412', accent2: '#8b3ddb', bg: '#130a1f' },
   };
 
   function hexToHsl(hex) {
@@ -66,9 +67,11 @@ TDG.theme = (() => {
     const root = document.documentElement.style;
 
     const accentRamp = ramp(preset.accent, 1);
-    const accent2Ramp = ramp(preset.accent, 0.85);
+    // Temas normais derivam o accent-2 da mesma tonalidade (só menos
+    // saturado); o de Halloween pede uma cor própria (roxo), não derivada.
+    const accent2Ramp = preset.accent2 ? ramp(preset.accent2, 1) : ramp(preset.accent, 0.85);
     root.setProperty('--color-accent', preset.accent);
-    root.setProperty('--color-accent-2', accent2Ramp[500]);
+    root.setProperty('--color-accent-2', preset.accent2 || accent2Ramp[500]);
     for (const [step, hex] of Object.entries(accentRamp)) root.setProperty(`--color-accent-${step}`, hex);
     for (const [step, hex] of Object.entries(accent2Ramp)) root.setProperty(`--color-accent-2-${step}`, hex);
 

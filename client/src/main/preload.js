@@ -30,3 +30,7 @@ contextBridge.exposeInMainWorld('appUpdater', {
 contextBridge.exposeInMainWorld('appInfo', {
   getVersion: () => ipcRenderer.invoke('app:get-version'),
 });
+
+contextBridge.exposeInMainWorld('appIcon', {
+  set: (mode) => ipcRenderer.send('app-icon:set', mode),
+});

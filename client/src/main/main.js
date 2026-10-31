@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron');
+const { app, BrowserWindow, session, desktopCapturer, ipcMain, nativeImage } = require('electron');
 const path = require('path');
 const { execFile } = require('child_process');
 const { autoUpdater } = require('electron-updater');
@@ -6,6 +6,9 @@ const log = require('electron-log');
 const audioMixer = require(path.join(__dirname, '..', '..', 'native', 'audio_mixer'));
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
+const DEFAULT_ICON_PATH = path.join(__dirname, '..', 'static', 'icons', 'default-app-icon.png');
+const HALLOWEEN_ICON_PATH = path.join(__dirname, '..', 'static', 'icons', 'halloween-icon.png');
 
 let mainWindow;
 
@@ -235,6 +238,16 @@ ipcMain.handle('update:check', async () => {
 });
 
 ipcMain.handle('app:get-version', () => app.getVersion());
+
+ipcMain.on('app-icon:set', (event, mode) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const iconPath = mode === 'halloween' ? HALLOWEEN_ICON_PATH : DEFAULT_ICON_PATH;
+  try {
+    mainWindow.setIcon(nativeImage.createFromPath(iconPath));
+  } catch (err) {
+    log.error('[appIcon] falhou ao trocar ícone', err);
+  }
+});
 
 app.whenReady().then(() => {
   // useSystemPicker usa o seletor nativo do Windows/macOS quando disponível
